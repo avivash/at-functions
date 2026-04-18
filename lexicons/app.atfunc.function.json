@@ -1,0 +1,89 @@
+{
+  "lexicon": 1,
+  "id": "app.atfunc.function",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A WebAssembly function registered on AT Protocol",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "required": ["name", "version", "mode", "code", "entrypoint", "inputEncoding", "outputEncoding"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable function name",
+            "maxLength": 128
+          },
+          "version": {
+            "type": "string",
+            "description": "Semver string",
+            "maxLength": 32
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of what the function does",
+            "maxLength": 2048
+          },
+          "mode": {
+            "type": "string",
+            "knownValues": ["pure-v1", "host-v1"],
+            "description": "Execution mode"
+          },
+          "code": {
+            "type": "blob",
+            "accept": ["application/wasm"],
+            "description": "Compiled WebAssembly binary"
+          },
+          "entrypoint": {
+            "type": "string",
+            "const": "run",
+            "description": "WASM export name to call (always 'run')"
+          },
+          "inputEncoding": {
+            "type": "string",
+            "const": "application/json",
+            "description": "Input encoding (always application/json)"
+          },
+          "outputEncoding": {
+            "type": "string",
+            "const": "application/json",
+            "description": "Output encoding (always application/json)"
+          },
+          "maxMemoryMb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256,
+            "default": 32,
+            "description": "Memory limit in megabytes"
+          },
+          "maxDurationMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "default": 100,
+            "description": "Execution timeout in milliseconds"
+          },
+          "public": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this function is publicly invocable"
+          },
+          "allowedHosts": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "For host-v1: list of AT URIs the function may read from"
+          },
+          "inputSchema": {
+            "type": "unknown",
+            "description": "Optional JSON Schema for input validation"
+          },
+          "outputSchema": {
+            "type": "unknown",
+            "description": "Optional JSON Schema for output description"
+          }
+        }
+      }
+    }
+  }
+}

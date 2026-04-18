@@ -1,0 +1,56 @@
+{
+  "lexicon": 1,
+  "id": "app.atfunc.run",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Invoke a registered AT Function",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["function", "input"],
+          "properties": {
+            "function": {
+              "type": "string",
+              "description": "at:// URI of the app.atfunc.function record"
+            },
+            "input": {
+              "type": "unknown",
+              "description": "JSON input passed to the function"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["ok"],
+          "properties": {
+            "ok": {
+              "type": "boolean",
+              "description": "Whether execution succeeded"
+            },
+            "output": {
+              "type": "unknown",
+              "description": "JSON output from the function"
+            },
+            "error": {
+              "type": "string",
+              "description": "Error message if execution failed"
+            },
+            "durationMs": {
+              "type": "integer",
+              "description": "Wall-clock execution time in milliseconds"
+            },
+            "functionCid": {
+              "type": "string",
+              "description": "CID of the function record"
+            }
+          }
+        }
+      }
+    }
+  }
+}

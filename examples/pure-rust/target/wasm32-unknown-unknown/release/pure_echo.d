@@ -1,0 +1,1 @@
+/Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/pure-rust/target/wasm32-unknown-unknown/release/pure_echo.wasm: /Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/pure-rust/src/lib.rs
