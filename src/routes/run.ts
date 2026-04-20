@@ -7,7 +7,7 @@ import type { RunRequest, RunResponse } from "../lib/types.js";
 
 const runRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Body: RunRequest; Reply: RunResponse }>(
-    "/xrpc/app.atfunc.run",
+    "/xrpc/at.functions.run",
     {
       schema: {
         body: runRequestSchema,

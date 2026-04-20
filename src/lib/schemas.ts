@@ -1,4 +1,4 @@
-// JSON Schema for POST /xrpc/app.atfunc.run request body
+// JSON Schema for POST /xrpc/at.functions.run request body
 export const runRequestSchema = {
   type: "object",
   required: ["function", "input"],
@@ -9,7 +9,7 @@ export const runRequestSchema = {
   additionalProperties: false,
 } as const;
 
-// JSON Schema for POST /xrpc/app.atfunc.run response
+// JSON Schema for POST /xrpc/at.functions.run response
 export const runResponseSchema = {
   type: "object",
   required: ["ok"],

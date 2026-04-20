@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.atfunc.run",
+  "id": "at.functions.run",
   "defs": {
     "main": {
       "type": "procedure",
@@ -13,7 +13,7 @@
           "properties": {
             "function": {
               "type": "string",
-              "description": "at:// URI of the app.atfunc.function record"
+              "description": "at:// URI of the at.functions.metadata record"
             },
             "input": {
               "type": "unknown",

@@ -8,9 +8,9 @@ import { executePure } from "../src/wasm/executePure.js";
 
 describe("parseAtUri", () => {
   test("parses a valid at:// URI", () => {
-    const uri = parseAtUri("at://did:plc:abc123/app.atfunc.function/my-fn");
+    const uri = parseAtUri("at://did:plc:abc123/at.functions.metadata/my-fn");
     expect(uri.repo).toBe("did:plc:abc123");
-    expect(uri.collection).toBe("app.atfunc.function");
+    expect(uri.collection).toBe("at.functions.metadata");
     expect(uri.rkey).toBe("my-fn");
   });
 
@@ -21,7 +21,7 @@ describe("parseAtUri", () => {
   });
 
   test("throws on wrong segment count", () => {
-    expect(() => parseAtUri("at://did:plc:abc123/app.atfunc.function")).toThrow(
+    expect(() => parseAtUri("at://did:plc:abc123/at.functions.metadata")).toThrow(
       "Invalid AT URI (expected at://repo/collection/rkey)"
     );
   });

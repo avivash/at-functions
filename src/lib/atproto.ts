@@ -29,9 +29,9 @@ export async function fetchFunctionRecord(
 ): Promise<{ record: FunctionRecord; cid: string }> {
   const { repo, collection, rkey } = parseAtUri(atUri);
 
-  if (collection !== "app.atfunc.function") {
+  if (collection !== "at.functions.metadata") {
     throw new Error(
-      `URI must point to app.atfunc.function collection, got: ${collection}`
+      `URI must point to at.functions.metadata collection, got: ${collection}`
     );
   }
 

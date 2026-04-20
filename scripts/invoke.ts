@@ -2,7 +2,7 @@
 //
 // Usage:
 //   bun scripts/invoke.ts \
-//     --function "at://did:plc:.../app.atfunc.function/echo-v1" \
+//     --function "at://did:plc:.../at.functions.metadata/echo-v1" \
 //     --input '{"hello":"world"}'
 //
 //   Optionally set SERVER_URL env var (default: http://localhost:3000)
@@ -38,7 +38,7 @@ console.log(`Input:    ${JSON.stringify(input)}`);
 console.log(`Server:   ${SERVER_URL}`);
 console.log();
 
-const response = await fetch(`${SERVER_URL}/xrpc/app.atfunc.run`, {
+const response = await fetch(`${SERVER_URL}/xrpc/at.functions.run`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ function: functionUri, input }),

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.atfunc.function",
+  "id": "at.functions.metadata",
   "defs": {
     "main": {
       "type": "record",

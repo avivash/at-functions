@@ -17,8 +17,8 @@ a.login({ identifier: process.env.ATPROTO_IDENTIFIER, password: process.env.ATPR
   .then(() => { process.stdout.write(a.did); });
 " 2>/dev/null)
 
-FUNCTION_PURE="at://$REPO_DID/app.atfunc.function/echo-v1"
-FUNCTION_HOST="at://$REPO_DID/app.atfunc.function/lister-v1"
+FUNCTION_PURE="at://$REPO_DID/at.functions.metadata/echo-v1"
+FUNCTION_HOST="at://$REPO_DID/at.functions.metadata/lister-v1"
 
 type() {
   local text="$1"

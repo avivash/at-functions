@@ -18,11 +18,11 @@ sequenceDiagram
     Note over Dev,ATP: Registration (one-time)
     Dev->>ATP: uploadBlob(function.wasm)
     ATP-->>Dev: blob CID
-    Dev->>ATP: putRecord(app.atfunc.function, { mode, code: blobCID, limits })
-    ATP-->>Dev: at://did/app.atfunc.function/rkey
+    Dev->>ATP: putRecord(at.functions.metadata, { mode, code: blobCID, limits })
+    ATP-->>Dev: at://did/at.functions.metadata/rkey
 
     Note over Dev,WM: Invocation
-    Dev->>FS: POST /xrpc/app.atfunc.run<br/>{ function: at://..., input: {...} }
+    Dev->>FS: POST /xrpc/at.functions.run<br/>{ function: at://..., input: {...} }
     FS->>ATP: getRecord(at://...)
     ATP-->>FS: { mode, code, maxMemoryMb, maxDurationMs }
     FS->>ATP: getBlob(did, blobCID)
@@ -37,14 +37,14 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     subgraph ATP ["AT Protocol (registry)"]
-        R[("app.atfunc.function\nrecord")]
+        R[("at.functions.metadata\nrecord")]
         B[("WASM blob")]
         R -- "ref → CID" --> B
     end
 
     subgraph FS ["Fastify Service (runtime)"]
         direction TB
-        EP["POST /xrpc/app.atfunc.run"]
+        EP["POST /xrpc/at.functions.run"]
         EP --> PV{"mode?"}
         PV -- "pure-v1" --> PE["executePure\n(in-process)"]
         PV -- "host-v1" --> HE["executeHost\n(worker thread)"]
@@ -107,11 +107,11 @@ All host functions are **read-only**. `limit` is clamped to 100.
 ```
 at-functions/
 ├── lexicons/               AT Lexicon definitions
-│   ├── app.atfunc.function.json
-│   └── app.atfunc.run.json
+│   ├── at.functions.metadata.json
+│   └── at.functions.run.json
 ├── src/
 │   ├── server.ts           Fastify entry point
-│   ├── routes/run.ts       POST /xrpc/app.atfunc.run
+│   ├── routes/run.ts       POST /xrpc/at.functions.run
 │   ├── lib/
 │   │   ├── atproto.ts      AT Proto SDK helpers
 │   │   ├── schemas.ts      JSON Schema for Fastify validation
@@ -211,7 +211,7 @@ ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=your-app-password \
     --blob '{"$type":"blob","ref":{"$link":"bafk..."},"mimeType":"application/wasm","size":12345}'
 ```
 
-This creates an `app.atfunc.function` record on your AT Proto repo.
+This creates an `at.functions.metadata` record on your AT Proto repo.
 The script prints the `at://` URI for the record.
 
 ### 3. Invoke the function
@@ -222,7 +222,7 @@ bun run dev
 
 # Then invoke:
 bun scripts/invoke.ts \
-  --function "at://did:plc:yourDID/app.atfunc.function/echo-v1" \
+  --function "at://did:plc:yourDID/at.functions.metadata/echo-v1" \
   --input '{"hello":"world","num":42}'
 ```
 
@@ -242,7 +242,7 @@ Upload and register `host_lister.wasm` with `--mode "host-v1"`, then invoke:
 
 ```bash
 bun scripts/invoke.ts \
-  --function "at://did:plc:yourDID/app.atfunc.function/lister-v1" \
+  --function "at://did:plc:yourDID/at.functions.metadata/lister-v1" \
   --input '{"repo":"did:plc:yourDID","collection":"app.bsky.feed.post","limit":5}'
 ```
 
@@ -259,12 +259,12 @@ Expected response:
 
 ## API
 
-### `POST /xrpc/app.atfunc.run`
+### `POST /xrpc/at.functions.run`
 
 **Request body:**
 ```json
 {
-  "function": "at://did:plc:.../app.atfunc.function/my-fn",
+  "function": "at://did:plc:.../at.functions.metadata/my-fn",
   "input": { "any": "json" }
 }
 ```
@@ -304,7 +304,7 @@ Tests cover:
 - WASM runs in-process with no OS-level isolation
 - `maxMemoryMb` is enforced via initial page count only; the module can request more via `memory.grow`
 - `maxDurationMs` uses `Promise.race` with `setTimeout` — the WASM may continue running briefly after timeout
-- No authentication or authorisation on the `/xrpc/app.atfunc.run` endpoint
+- No authentication or authorisation on the `/xrpc/at.functions.run` endpoint
 - `host-v1` functions can read any public AT Proto data
 
 For production: use a separate process, seccomp/landlock/VM isolation, and proper memory limits enforced at the V8/Wasm engine level.
@@ -314,7 +314,7 @@ For production: use a separate process, seccomp/landlock/VM isolation, and prope
 ## How it works (architecture)
 
 ```
-POST /xrpc/app.atfunc.run
+POST /xrpc/at.functions.run
   │
   ├─ parseAtUri(at://...)
   ├─ fetchFunctionRecord → AT Proto getRecord
@@ -346,7 +346,7 @@ POST /xrpc/app.atfunc.run
 
 ## Lexicon definitions
 
-See [`lexicons/app.atfunc.function.json`](lexicons/app.atfunc.function.json) and [`lexicons/app.atfunc.run.json`](lexicons/app.atfunc.run.json).
+See [`lexicons/at.functions.metadata.json`](lexicons/at.functions.metadata.json) and [`lexicons/at.functions.run.json`](lexicons/at.functions.run.json).
 
 ---
 

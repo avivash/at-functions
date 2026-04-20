@@ -1,4 +1,4 @@
-// Create an app.atfunc.function record on AT Proto.
+// Create an at.functions.metadata record on AT Proto.
 //
 // Usage (fill in the blob JSON from upload-function.ts output):
 //   ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=xxx \
@@ -53,7 +53,7 @@ const agent = new AtpAgent({ service: SERVICE });
 await agent.login({ identifier: IDENTIFIER, password: PASSWORD });
 
 const record = {
-  $type: "app.atfunc.function",
+  $type: "at.functions.metadata",
   name,
   version,
   description,
@@ -69,7 +69,7 @@ const record = {
 
 const { data } = await agent.com.atproto.repo.putRecord({
   repo: agent.did!,
-  collection: "app.atfunc.function",
+  collection: "at.functions.metadata",
   rkey,
   record,
 });
