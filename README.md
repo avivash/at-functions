@@ -1,9 +1,5 @@
 # AT Functions
 
-> **⚠️ PROOF OF CONCEPT — NOT PRODUCTION SAFE**
-> This is an experimental POC. The WASM sandbox is NOT production-grade.
-> Do not expose this service to untrusted input or the public internet.
-
 AT Functions treats the AT Protocol as a code registry and a Fastify service as a WASM execution runtime. Functions are stored as signed records on AT Proto, fetched on demand, and executed in a sandboxed WebAssembly environment.
 
 [![demo](https://asciinema.org/a/WNxOeLHwd874B1cR.svg)](https://asciinema.org/a/WNxOeLHwd874B1cR)
