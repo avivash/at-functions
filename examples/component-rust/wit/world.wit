@@ -1,0 +1,12 @@
+package atfunc:runtime@0.1.0;
+
+interface atproto {
+    read-record: func(at-uri: string) -> result<string, string>;
+    read-blob: func(cid: string, repo: string) -> result<list<u8>, string>;
+    list-collection: func(repo: string, collection: string, cursor: option<string>, limit: u32) -> result<string, string>;
+}
+
+world at-function {
+    import atproto;
+    export run: func(input-json: string) -> result<string, string>;
+}

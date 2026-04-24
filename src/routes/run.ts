@@ -2,6 +2,7 @@ import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from "fastify";
 import { fetchFunctionRecord, fetchBlob, parseAtUri } from "../lib/atproto.js";
 import { executePure } from "../wasm/executePure.js";
 import { executeHost } from "../wasm/executeHost.js";
+import { executeComponent } from "../wasm/executeComponent.js";
 import { runRequestSchema, runResponseSchema } from "../lib/schemas.js";
 import type { RunRequest, RunResponse } from "../lib/types.js";
 
@@ -26,7 +27,11 @@ const runRoute: FastifyPluginAsync = async (fastify) => {
         functionCid = cid;
 
         // Validate mode
-        if (record.mode !== "pure-v1" && record.mode !== "host-v1") {
+        if (
+          record.mode !== "pure-v1" &&
+          record.mode !== "host-v1" &&
+          record.mode !== "component-v1"
+        ) {
           return reply.status(400).send({
             ok: false,
             error: `Unsupported execution mode: ${record.mode}`,
@@ -60,7 +65,9 @@ const runRoute: FastifyPluginAsync = async (fastify) => {
         const output = await Promise.race([
           record.mode === "pure-v1"
             ? executePure(wasmBytes, record, input, blobCid)
-            : executeHost(wasmBytes, record, input, blobCid),
+            : record.mode === "component-v1"
+              ? executeComponent(wasmBytes, input)
+              : executeHost(wasmBytes, record, input, blobCid),
           new Promise<never>((_, reject) =>
             setTimeout(
               () => reject(new Error(`Execution timed out after ${maxMs}ms`)),

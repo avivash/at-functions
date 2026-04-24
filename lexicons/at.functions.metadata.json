@@ -27,7 +27,7 @@
           },
           "mode": {
             "type": "string",
-            "knownValues": ["pure-v1", "host-v1"],
+            "knownValues": ["pure-v1", "host-v1", "component-v1"],
             "description": "Execution mode"
           },
           "code": {

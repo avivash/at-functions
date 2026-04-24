@@ -1,4 +1,4 @@
-export type ExecutionMode = "pure-v1" | "host-v1";
+export type ExecutionMode = "pure-v1" | "host-v1" | "component-v1";
 
 export interface AtUri {
   repo: string;

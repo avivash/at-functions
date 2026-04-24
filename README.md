@@ -2,7 +2,13 @@
 
 AT Functions treats the AT Protocol as a code registry and a Fastify service as a WASM execution runtime. Functions are stored as signed records on AT Proto, fetched on demand, and executed in a sandboxed WebAssembly environment.
 
+**pure-v1 / host-v1** — ABI-level execution modes:
+
 [![demo](https://asciinema.org/a/WNxOeLHwd874B1cR.svg)](https://asciinema.org/a/WNxOeLHwd874B1cR)
+
+**component-v1** — WASI Component Model + WIT typed interfaces:
+
+[![component-v1 demo](https://asciinema.org/a/FRBHPlHE41DAVlVT.svg)](https://asciinema.org/a/FRBHPlHE41DAVlVT)
 
 ```mermaid
 sequenceDiagram
@@ -62,8 +68,49 @@ flowchart LR
 |------|------|----------|---------------|
 | `pure-v1` | ✗ | ✗ | ✓ |
 | `host-v1` | ✗ | Read-only AT Proto | mostly ✓ |
+| `component-v1` | ✗ | Typed WIT imports | mostly ✓ |
 
-### ABI contract (both modes)
+### component-v1
+
+`component-v1` uses the [WASI Component Model](https://component-model.bytecodealliance.org/) and [WIT (WebAssembly Interface Types)](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) instead of the raw pointer/length ABI used by `pure-v1` and `host-v1`. It is the long-term direction for AT Functions.
+
+**Why it's better:**
+- Typed interfaces defined in WIT — no manual ptr/len packing or JSON envelope wrapping for host calls.
+- Language-agnostic: any language with a WIT bindgen (Rust, Go, C, Python, …) can implement the interface.
+- The host contract is explicit and machine-verifiable, not just a convention.
+
+**Why WASI filesystem is NOT used:** This is intentional. Only typed AT Proto capabilities (`atfunc:runtime/atproto`) are exposed to the component. No general-purpose WASI interfaces are imported, keeping the sandbox surface minimal.
+
+**Status:** Currently experimental in this POC. jco programmatic transpilation is used at runtime (no ahead-of-time step on the server).
+
+**Requirements:**
+- [`wasmtime`](https://wasmtime.dev/) (for local testing / `wasm-tools`)
+- [`wasm-tools`](https://github.com/bytecodealliance/wasm-tools) — to wrap a `wasm32-wasip1` binary into a component
+- Rust `wasm32-wasip1` target: `rustup target add wasm32-wasip1`
+
+**Compiling the component-rust example:**
+
+```bash
+cd examples/component-rust
+
+# Build the core WASM module targeting WASI P1
+cargo build --target wasm32-wasip1 --release
+
+# Wrap it into a WASI Component Model component
+wasm-tools component new \
+  target/wasm32-wasip1/release/component_lister.wasm \
+  -o component_lister.component.wasm
+```
+
+**Invoking:**
+
+```bash
+bun scripts/invoke.ts \
+  --function "at://did:plc:yourDID/at.functions.metadata/component-lister-v1" \
+  --input '{"repo":"did:plc:yourDID","collection":"app.bsky.feed.post","limit":5}'
+```
+
+### ABI contract (pure-v1 and host-v1)
 
 Your WASM module must export:
 
