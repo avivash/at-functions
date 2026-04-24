@@ -1,1 +1,0 @@
-/Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/host-rust/target/wasm32-unknown-unknown/release/host_lister.wasm: /Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/host-rust/src/lib.rs

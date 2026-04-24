@@ -1,9 +1,0 @@
-/Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/component-rust/target/wasm32-wasip1/release/deps/futures_executor-739c2945641e3551.d: /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs
-
-/Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/component-rust/target/wasm32-wasip1/release/deps/libfutures_executor-739c2945641e3551.rlib: /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs
-
-/Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/component-rust/target/wasm32-wasip1/release/deps/libfutures_executor-739c2945641e3551.rmeta: /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs /Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs
-
-/Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs:
-/Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs:
-/Users/andrewvivash/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs:

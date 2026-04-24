@@ -1,1 +1,0 @@
-/Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/component-rust/target/wasm32-wasip1/release/component_lister.wasm: /Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/component-rust/src/lib.rs /Users/andrewvivash/Desktop/Projects/ATProto/at-functions/examples/component-rust/wit/world.wit
