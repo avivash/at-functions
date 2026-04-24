@@ -1,5 +1,20 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
+
+# Environment — never commit secrets
 .env
+.env.local
+
+# Rust build artifacts
+examples/*/target
+
+# asciinema casts (large binary-ish files, link to asciinema.org instead)
+*.cast
+
+# Editor / tool config
 .cursorrules
 .claude
+.DS_Store
