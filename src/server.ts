@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import runRoute from "./routes/run.js";
 
 const PORT = parseInt(process.env.PORT ?? "3000", 10);
@@ -16,6 +17,10 @@ const server = Fastify({
       : undefined,
   },
   bodyLimit: 1024 * 1024, // 1 MB request body limit
+});
+
+await server.register(cors, {
+  origin: ["https://functions.at", /\.functions\.at$/],
 });
 
 await server.register(runRoute);
