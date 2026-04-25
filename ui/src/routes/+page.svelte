@@ -185,6 +185,7 @@
 
 <svelte:head>
   <title>AT Functions</title>
+  <link rel="canonical" href="https://functions.at" />
 </svelte:head>
 
 <div class="page" class:dark class:light={!dark}>
