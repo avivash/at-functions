@@ -1,0 +1,109 @@
+# Build the AT Functions API Docker image (GHCR) and the static UI (artifact).
+#
+# Repository Variables (Settings → Secrets and variables → Actions → Variables):
+#   PUBLIC_ATSEARCH_URL              — AT Search query-node base URL (no trailing slash)
+#   PUBLIC_ATP_SERVICE               — optional (default https://bsky.social)
+#   PUBLIC_AT_FUNCTIONS_API          — optional (default https://api.functions.at)
+#   PUBLIC_DEFAULT_FUNCTIONS_HANDLE  — optional; only when PUBLIC_ATSEARCH_URL is unset
+#
+# workflow_dispatch can override PUBLIC_ATSEARCH_URL for a one-off UI build.
+
+name: Docker and UI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      public_atsearch_url:
+        description: "Override PUBLIC_ATSEARCH_URL for the UI build (optional)"
+        required: false
+        type: string
+
+concurrency:
+  group: docker-ui-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  ui:
+    name: UI (static artifact)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.2"
+
+      - name: Install and build
+        env:
+          PUBLIC_ATSEARCH_URL: ${{ inputs.public_atsearch_url || vars.PUBLIC_ATSEARCH_URL }}
+          PUBLIC_ATP_SERVICE: ${{ vars.PUBLIC_ATP_SERVICE }}
+          PUBLIC_AT_FUNCTIONS_API: ${{ vars.PUBLIC_AT_FUNCTIONS_API }}
+          PUBLIC_DEFAULT_FUNCTIONS_HANDLE: ${{ vars.PUBLIC_DEFAULT_FUNCTIONS_HANDLE }}
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: at-functions-ui
+          path: ui/build/
+
+  docker-api:
+    name: API image (GHCR)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lowercase image name (GHCR)
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          target: api
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,9 +1,24 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  const SERVICE = "https://bsky.social";
-  const API_URL = "https://api.functions.at";
-  const DEFAULT_HANDLE = "hamburgerz.bsky.social";
+  /** Vite / SvelteKit: set at build time (e.g. on your droplet CI). */
+  const SERVICE =
+    (import.meta.env.PUBLIC_ATP_SERVICE as string | undefined) ??
+    "https://bsky.social";
+  const API_URL =
+    (import.meta.env.PUBLIC_AT_FUNCTIONS_API as string | undefined) ??
+    "https://api.functions.at";
+  /** When set, the grid uses AT Search (all indexed repos) instead of listRecords for one handle. */
+  const ATSEARCH_URL = (() => {
+    const raw = import.meta.env.PUBLIC_ATSEARCH_URL as string | undefined;
+    const u = raw?.replace(/\/$/, "").trim();
+    return u ? u : undefined;
+  })();
+  const DEFAULT_HANDLE =
+    (import.meta.env.PUBLIC_DEFAULT_FUNCTIONS_HANDLE as string | undefined) ??
+    "hamburgerz.bsky.social";
+
+  const FUNCTIONS_COLLECTION = "at.functions.metadata";
 
   type Mode = "pure-v1" | "host-v1" | "component-v1";
 
@@ -52,6 +67,9 @@
   let results = $derived(
     all.filter((fn) => {
       const matchesMode = modeFilter === "all" || fn.value.mode === modeFilter;
+      if (ATSEARCH_URL) {
+        return matchesMode;
+      }
       const matchesQuery =
         !query.trim() ||
         fn.value.name?.toLowerCase().includes(query.toLowerCase()) ||
@@ -70,8 +88,91 @@
     return (await res.json()).did;
   }
 
+  function didFromAtUri(uri: string): string {
+    const m = /^at:\/\/([^/]+)\//.exec(uri);
+    return m?.[1] ?? "";
+  }
+
+  function modeFromSearchRecord(tags: string[] | undefined): Mode {
+    const modes: Mode[] = ["pure-v1", "host-v1", "component-v1"];
+    const t = tags?.map((x) => x.toLowerCase()) ?? [];
+    for (const m of modes) {
+      if (t.includes(m)) return m;
+    }
+    return "pure-v1";
+  }
+
+  /** Map AT Search hit (normalized `at.functions.metadata` index record) to card model. */
+  function fromAtSearchHit(hit: {
+    ref: { uri: string; cid: string };
+    record: {
+      title?: string;
+      description?: string;
+      tags?: string[];
+    };
+  }): FunctionResult | null {
+    const uri = hit.ref.uri;
+    if (!uri.includes(`/${FUNCTIONS_COLLECTION}/`)) return null;
+    const did = didFromAtUri(uri);
+    if (!did) return null;
+    const title = (hit.record.title ?? "").trim();
+    let name = title || uri.split("/").pop() || "function";
+    let version = "?";
+    const vm = title.match(/^(.+?)\s+v([\w.-]+)$/);
+    if (vm) {
+      name = vm[1]!.trim();
+      version = vm[2]!.trim();
+    }
+    const mode = modeFromSearchRecord(hit.record.tags);
+    const description =
+      typeof hit.record.description === "string"
+        ? hit.record.description
+        : undefined;
+    return {
+      uri,
+      cid: hit.ref.cid,
+      did,
+      value: {
+        name,
+        version,
+        description,
+        mode,
+      },
+    };
+  }
+
+  async function fetchFromAtSearch(q: string): Promise<FunctionResult[]> {
+    const params = new URLSearchParams();
+    const trimmed = q.trim();
+    if (trimmed) {
+      params.set("q", trimmed);
+      params.set("collection", FUNCTIONS_COLLECTION);
+    } else {
+      params.set("q", `type:${FUNCTIONS_COLLECTION}`);
+    }
+    const res = await fetch(`${ATSEARCH_URL}/search?${params.toString()}`);
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(
+        `AT Search failed (${res.status})${errText ? `: ${errText.slice(0, 200)}` : ""}`,
+      );
+    }
+    const data = (await res.json()) as {
+      results: Array<{
+        ref: { uri: string; cid: string };
+        record: { title?: string; description?: string; tags?: string[] };
+      }>;
+    };
+    const out: FunctionResult[] = [];
+    for (const hit of data.results ?? []) {
+      const row = fromAtSearchHit(hit);
+      if (row) out.push(row);
+    }
+    return out;
+  }
+
   async function fetchFunctions(
-    handleOrDid: string,
+handleOrDid: string,
   ): Promise<FunctionResult[]> {
     const did = handleOrDid.startsWith("did:")
       ? handleOrDid
@@ -92,22 +193,40 @@
     );
   }
 
+  function ensurePlaygrounds(rows: FunctionResult[]) {
+    for (const fn of rows) {
+      if (!playgrounds[fn.uri]) {
+        playgrounds[fn.uri] = {
+          open: false,
+          input: "{}",
+          running: false,
+          response: null,
+          error: null,
+        };
+      }
+    }
+  }
+
   async function load() {
     loading = true;
     error = "";
     try {
       all = await fetchFunctions(DEFAULT_HANDLE);
-      for (const fn of all) {
-        if (!playgrounds[fn.uri]) {
-          playgrounds[fn.uri] = {
-            open: false,
-            input: "{}",
-            running: false,
-            response: null,
-            error: null,
-          };
-        }
-      }
+      ensurePlaygrounds(all);
+    } catch (e) {
+      error = e instanceof Error ? e.message : String(e);
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function refreshFromAtSearch(q: string) {
+    if (!ATSEARCH_URL) return;
+    loading = true;
+    error = "";
+    try {
+      all = await fetchFromAtSearch(q);
+      ensurePlaygrounds(all);
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
     } finally {
@@ -180,7 +299,19 @@
     return uri.split("/").at(-1) ?? uri;
   }
 
-  onMount(load);
+  onMount(() => {
+    if (!ATSEARCH_URL) void load();
+  });
+
+  $effect(() => {
+    if (!ATSEARCH_URL) return;
+    const q = query;
+    const delay = q.trim() ? 350 : 0;
+    const id = setTimeout(() => {
+      void refreshFromAtSearch(q);
+    }, delay);
+    return () => clearTimeout(id);
+  });
 </script>
 
 <svelte:head>
