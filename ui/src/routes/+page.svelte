@@ -536,8 +536,8 @@
 
           <div class="sheet-body">
             <div class="sheet-hint">
-              Enter the PDS <span class="mono">hostname</span> only (no
-              <span class="mono">https://</span>).
+              Paste a PDS URL or hostname. Example:{" "}
+              <span class="mono">https://stropharia.us-west.host.bsky.network</span>
             </div>
 
             <div class="crawl-row sheet-row">
