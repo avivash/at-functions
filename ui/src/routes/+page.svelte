@@ -172,7 +172,7 @@
   }
 
   async function fetchFunctions(
-handleOrDid: string,
+    handleOrDid: string,
   ): Promise<FunctionResult[]> {
     const did = handleOrDid.startsWith("did:")
       ? handleOrDid
@@ -827,8 +827,8 @@ handleOrDid: string,
     margin: 0;
     line-height: 1.5;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    /* -webkit-line-clamp: 2;
+    line-clamp: 2; */
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
