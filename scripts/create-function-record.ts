@@ -56,6 +56,7 @@ const record = {
   $type: "at.functions.metadata",
   name,
   version,
+  updatedAt: new Date().toISOString(),
   description,
   mode,
   code: blob,
@@ -74,7 +75,7 @@ const { data } = await agent.com.atproto.repo.putRecord({
   record,
 });
 
-console.log("Function record created!");
+console.log("Function record created/updated!");
 console.log("URI:", data.uri);
 console.log("CID:", data.cid);
 console.log();

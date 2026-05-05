@@ -20,6 +20,11 @@
             "description": "Semver string",
             "maxLength": 32
           },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update time (ISO 8601 string). Useful for ensuring deploys produce a repo commit.",
+            "maxLength": 64
+          },
           "description": {
             "type": "string",
             "description": "Optional description of what the function does",

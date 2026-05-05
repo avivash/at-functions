@@ -9,6 +9,7 @@ export interface AtUri {
 export interface FunctionRecord {
   name: string;
   version: string;
+  updatedAt?: string;
   description?: string;
   mode: ExecutionMode;
   code: BlobRef;
