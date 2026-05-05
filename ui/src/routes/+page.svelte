@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  /** Vite / SvelteKit: set at build time (e.g. on your droplet CI). */
+  /** Build-time `PUBLIC_*` vars — see `vite.config.ts` (process.env wins over `ui/.env` so empty `.env` lines do not wipe CI/shell exports). */
   const SERVICE =
     (import.meta.env.PUBLIC_ATP_SERVICE as string | undefined) ??
     "https://bsky.social";
