@@ -537,7 +537,9 @@
           <div class="sheet-body">
             <div class="sheet-hint">
               Paste a PDS URL or hostname. Example:{" "}
-              <span class="mono">https://stropharia.us-west.host.bsky.network</span>
+              <span class="mono"
+                >https://stropharia.us-west.host.bsky.network</span
+              >
             </div>
 
             <div class="crawl-row sheet-row">
@@ -991,6 +993,8 @@
   .sheet-hint {
     font-size: 0.82rem;
     color: var(--text-2);
+    display: block;
+    margin-bottom: 1.25rem;
   }
 
   @keyframes sheet-in {
