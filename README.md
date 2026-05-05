@@ -253,8 +253,8 @@ ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=your-app-password \
     --mode "pure-v1" \
     --rkey "echo-v1" \
     --description "Echoes the input JSON back to you." \
-    --inputSchema '{"type":"object","additionalProperties":true}' \
-    --outputSchema '{"type":"object","additionalProperties":true}' \
+    --inputSchema '{"type":"object","properties":{"hello":{"type":"string"},"num":{"type":"number"}},"required":["hello"],"additionalProperties":true}' \
+    --outputSchema '{"type":"object","properties":{"ok":{"type":"boolean"},"echo":{"type":"object"}},"required":["ok","echo"]}' \
     --blob '{"$type":"blob","ref":{"$link":"bafk..."},"mimeType":"application/wasm","size":12345}'
 ```
 
