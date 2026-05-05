@@ -321,42 +321,43 @@
 
 <div class="page" class:dark class:light={!dark}>
   <div class="col">
-    <header>
-      <span class="wordmark">AT Functions</span>
-      <button
-        class="theme-toggle"
-        onclick={toggleTheme}
-        aria-label="Toggle theme"
-      >
-        {#if dark}
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-          >
-            <circle cx="12" cy="12" r="4" />
-            <path
-              d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
-              stroke-linecap="round"
-            />
-          </svg>
-        {:else}
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-          >
-            <path
-              d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        {/if}
-      </button>
-    </header>
+    <div class="layout-narrow">
+      <header>
+        <span class="wordmark">AT Functions</span>
+        <button
+          class="theme-toggle"
+          onclick={toggleTheme}
+          aria-label="Toggle theme"
+        >
+          {#if dark}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                stroke-linecap="round"
+              />
+            </svg>
+          {:else}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          {/if}
+        </button>
+      </header>
 
     <div class="search-wrap">
       <svg
@@ -411,13 +412,20 @@
         {/each}
       </div>
     {/if}
+    </div>
 
     {#if error}
-      <p class="msg err">{error}</p>
+      <div class="layout-narrow">
+        <p class="msg err">{error}</p>
+      </div>
     {:else if loading}
-      <p class="msg muted">Loading…</p>
+      <div class="layout-narrow">
+        <p class="msg muted">Loading…</p>
+      </div>
     {:else if results.length === 0}
-      <p class="msg muted">No functions found.</p>
+      <div class="layout-narrow">
+        <p class="msg muted">No functions found.</p>
+      </div>
     {:else}
       <div class="grid">
         {#each results as fn}
@@ -568,8 +576,14 @@
 
   .col {
     width: 100%;
-    max-width: 720px;
+    max-width: 1280px;
     padding-bottom: 6rem;
+  }
+
+  .layout-narrow {
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
   }
 
   /* ── Header ── */
@@ -749,8 +763,16 @@
   /* ── Grid ── */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    width: 100%;
+    /* Up to 4 tracks on wide layouts; search stays 720px via .layout-narrow */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 272px), 1fr));
     gap: 0.75rem;
+  }
+
+  @media (min-width: 1100px) {
+    .grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   .card {
