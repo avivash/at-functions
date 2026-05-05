@@ -11,7 +11,13 @@
   /** When set, the grid uses AT Search (all indexed repos) instead of listRecords for one handle. */
   const ATSEARCH_URL = (() => {
     const raw = import.meta.env.PUBLIC_ATSEARCH_URL as string | undefined;
-    const u = raw?.replace(/\/$/, "").trim();
+    let u = raw?.trim() ?? "";
+    if (!u) return undefined;
+    u = u.replace(/\/$/, "");
+    // Accept either a base URL (…/api) or a legacy "/search" base (…/api/search).
+    // The UI calls `${ATSEARCH_URL}/search`, so strip a trailing "/search" if present.
+    if (u.toLowerCase().endsWith("/search")) u = u.slice(0, -"/search".length);
+    u = u.replace(/\/$/, "");
     return u ? u : undefined;
   })();
   const DEFAULT_HANDLE =
