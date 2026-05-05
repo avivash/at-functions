@@ -35,6 +35,8 @@
     mode: Mode;
     maxMemoryMb?: number;
     maxDurationMs?: number;
+    inputSchema?: unknown;
+    outputSchema?: unknown;
   }
 
   interface FunctionResult {
@@ -92,6 +94,19 @@
       return matchesMode && matchesQuery;
     }),
   );
+
+  function extractSchemaLines(desc?: string): { clean?: string; args?: string; returns?: string } {
+    if (!desc) return { clean: desc };
+    const args = /(?:^|\n|\.\s)\s*Args:\s*([^.\n]+)\.?/i.exec(desc)?.[1]?.trim();
+    const returns = /(?:^|\n|\.\s)\s*Returns:\s*([^.\n]+)\.?/i.exec(desc)?.[1]?.trim();
+    if (!args && !returns) return { clean: desc };
+    const clean = desc
+      .replace(/\s*Args:\s*[^.\n]+\.?/gi, '')
+      .replace(/\s*Returns:\s*[^.\n]+\.?/gi, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    return { clean, args, returns };
+  }
 
   async function resolveHandle(handle: string): Promise<string> {
     const h = handle.startsWith("@") ? handle.slice(1) : handle;
@@ -600,7 +615,14 @@
             </div>
 
             {#if fn.value.description}
-              <p class="desc">{fn.value.description}</p>
+              {@const sx = extractSchemaLines(fn.value.description)}
+              <p class="desc">{sx.clean}</p>
+              {#if sx.args || sx.returns}
+                <div class="schema">
+                  {#if sx.args}<div><span class="k">Args</span> <span class="v">{sx.args}</span></div>{/if}
+                  {#if sx.returns}<div><span class="k">Returns</span> <span class="v">{sx.returns}</span></div>{/if}
+                </div>
+              {/if}
             {/if}
 
             <!-- Curl snippet -->
@@ -1182,6 +1204,21 @@
     line-clamp: 2; */
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .schema {
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--text-2);
+    line-height: 1.4;
+    font-family: monospace;
+  }
+  .schema .k {
+    color: var(--muted);
+    margin-right: 0.4rem;
+  }
+  .schema .v {
+    color: var(--text-2);
   }
 
   /* ── Snippet ── */
