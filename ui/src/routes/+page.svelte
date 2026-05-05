@@ -95,17 +95,34 @@
     }),
   );
 
-  function extractSchemaLines(desc?: string): { clean?: string; args?: string; returns?: string } {
+  function extractMeta(desc?: string): {
+    clean?: string;
+    args?: string;
+    returns?: string;
+    maxMemoryMb?: string;
+    maxDurationMs?: string;
+    visibility?: string;
+  } {
     if (!desc) return { clean: desc };
     const args = /(?:^|\n|\.\s)\s*Args:\s*([^.\n]+)\.?/i.exec(desc)?.[1]?.trim();
     const returns = /(?:^|\n|\.\s)\s*Returns:\s*([^.\n]+)\.?/i.exec(desc)?.[1]?.trim();
-    if (!args && !returns) return { clean: desc };
+    const maxMemoryMb = /(?:^|\n|\.\s)\s*Max memory:\s*([0-9]+)\s*MB\.?/i.exec(desc)?.[1]?.trim();
+    const maxDurationMs = /(?:^|\n|\.\s)\s*Max duration:\s*([0-9]+)\s*ms\.?/i.exec(desc)?.[1]?.trim();
+    const visibility = /(?:^|\n|\.\s)\s*(Public|Private)\.?/i.exec(desc)?.[1]?.trim();
+
     const clean = desc
+      .replace(/\s*Mode:\s*[^.\n]+\.?/gi, '')
+      .replace(/\s*Max memory:\s*[^.\n]+\.?/gi, '')
+      .replace(/\s*Max duration:\s*[^.\n]+\.?/gi, '')
+      .replace(/\s*(Public|Private)\.?/gi, '')
+      .replace(/\s*Allowed hosts:\s*[^.\n]+\.?/gi, '')
+      .replace(/\s*AT URI:\s*[^.\n]+\.?/gi, '')
       .replace(/\s*Args:\s*[^.\n]+\.?/gi, '')
       .replace(/\s*Returns:\s*[^.\n]+\.?/gi, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
-    return { clean, args, returns };
+
+    return { clean, args, returns, maxMemoryMb, maxDurationMs, visibility };
   }
 
   async function resolveHandle(handle: string): Promise<string> {
@@ -615,14 +632,19 @@
             </div>
 
             {#if fn.value.description}
-              {@const sx = extractSchemaLines(fn.value.description)}
-              <p class="desc">{sx.clean}</p>
-              {#if sx.args || sx.returns}
+              {@const sx = extractMeta(fn.value.description)}
+              <p class="desc">{sx.clean || "No description provided."}</p>
+              {#if sx.args || sx.returns || sx.maxMemoryMb || sx.maxDurationMs || sx.visibility}
                 <div class="schema">
                   {#if sx.args}<div><span class="k">Args</span> <span class="v">{sx.args}</span></div>{/if}
                   {#if sx.returns}<div><span class="k">Returns</span> <span class="v">{sx.returns}</span></div>{/if}
+                  {#if sx.maxMemoryMb}<div><span class="k">Memory</span> <span class="v">{sx.maxMemoryMb} MB</span></div>{/if}
+                  {#if sx.maxDurationMs}<div><span class="k">Timeout</span> <span class="v">{sx.maxDurationMs} ms</span></div>{/if}
+                  {#if sx.visibility}<div><span class="k">Visibility</span> <span class="v">{sx.visibility}</span></div>{/if}
                 </div>
               {/if}
+            {:else}
+              <p class="desc">No description provided.</p>
             {/if}
 
             <!-- Curl snippet -->

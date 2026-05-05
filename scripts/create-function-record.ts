@@ -30,6 +30,8 @@ const version = arg("--version") ?? "0.1.0";
 const mode = arg("--mode") ?? "pure-v1";
 const rkey = arg("--rkey") ?? name;
 const description = arg("--description");
+const inputSchemaJson = arg("--inputSchema");
+const outputSchemaJson = arg("--outputSchema");
 const blobJson = arg("--blob");
 const maxMemoryMb = parseInt(arg("--maxMemoryMb") ?? "32", 10);
 const maxDurationMs = parseInt(arg("--maxDurationMs") ?? "100", 10);
@@ -46,6 +48,21 @@ try {
   blob = JSON.parse(blobJson);
 } catch {
   console.error("--blob must be valid JSON");
+  process.exit(1);
+}
+
+let inputSchema: unknown = undefined;
+let outputSchema: unknown = undefined;
+try {
+  if (inputSchemaJson) inputSchema = JSON.parse(inputSchemaJson);
+} catch {
+  console.error("--inputSchema must be valid JSON");
+  process.exit(1);
+}
+try {
+  if (outputSchemaJson) outputSchema = JSON.parse(outputSchemaJson);
+} catch {
+  console.error("--outputSchema must be valid JSON");
   process.exit(1);
 }
 
@@ -66,6 +83,8 @@ const record = {
   maxMemoryMb,
   maxDurationMs,
   public: true,
+  ...(inputSchema !== undefined ? { inputSchema } : {}),
+  ...(outputSchema !== undefined ? { outputSchema } : {}),
 };
 
 const { data } = await agent.com.atproto.repo.putRecord({
