@@ -10,7 +10,10 @@
 //       --name "greeter" \
 //       --version "1.0.0" \
 //       --mode "pure-v1" \
-//       --rkey "greeter-v1"
+//       --rkey "greeter-v1" \
+//       --description "Returns a greeting for a name." \
+//       --inputSchema '{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}' \
+//       --outputSchema '{"type":"object","properties":{"greeting":{"type":"string"}},"required":["greeting"]}'
 
 import { readFileSync } from 'node:fs'
 import { AtpAgent } from '@atproto/api'

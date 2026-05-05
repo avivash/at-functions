@@ -33,22 +33,34 @@ pause() { sleep "${1:-1.5}"; }
 
 upload_and_register() {
   local wasm="$1" mode="$2" rkey="$3" name="$4" max_ms="${5:-100}"
+  local description="${6:-}"
+  local in_schema="${7:-}"
+  local out_schema="${8:-}"
   local blob
   blob=$(pnpm exec tsx scripts/upload-function.ts "$wasm" 2>/dev/null \
     | awk '/^\{/,/^\}/' | tr -d '\n')
   pnpm exec tsx scripts/create-function-record.ts \
     --name "$name" --version "0.1.0" --mode "$mode" --rkey "$rkey" \
     --maxDurationMs "$max_ms" \
+    ${description:+--description "$description"} \
+    ${in_schema:+--inputSchema "$in_schema"} \
+    ${out_schema:+--outputSchema "$out_schema"} \
     --blob "$blob" > /dev/null 2>&1
 }
 
 upload_and_register \
   examples/pure-rust/target/wasm32-unknown-unknown/release/pure_echo.wasm \
-  pure-v1 echo-v1 echo 500
+  pure-v1 echo-v1 echo 500 \
+  "Echoes the input JSON back to you." \
+  '{"type":"object","additionalProperties":true}' \
+  '{"type":"object","additionalProperties":true}'
 
 upload_and_register \
   examples/host-rust/target/wasm32-unknown-unknown/release/host_lister.wasm \
-  host-v1 lister-v1 lister 5000
+  host-v1 lister-v1 lister 5000 \
+  "Lists records from an AT Proto collection (read-only)." \
+  '{"type":"object","properties":{"repo":{"type":"string"},"collection":{"type":"string"},"limit":{"type":"integer"}},"required":["repo","collection"]}' \
+  '{"type":"object","properties":{"ok":{"type":"boolean"}},"required":["ok"]}'
 
 # ── Demo ─────────────────────────────────────────────────────────────────────
 

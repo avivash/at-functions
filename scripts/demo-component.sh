@@ -52,6 +52,9 @@ pnpm exec tsx scripts/create-function-record.ts \
   --mode "component-v1" \
   --rkey "component-lister-v1" \
   --maxDurationMs 30000 \
+  --description "Lists records from an AT Proto collection using typed WIT imports." \
+  --inputSchema '{"type":"object","properties":{"repo":{"type":"string"},"collection":{"type":"string"},"limit":{"type":"integer"}},"required":["repo","collection"]}' \
+  --outputSchema '{"type":"object","properties":{"ok":{"type":"boolean"}},"required":["ok"]}' \
   --blob "$blob" > /dev/null 2>&1
 
 # ── Demo ─────────────────────────────────────────────────────────────────────
