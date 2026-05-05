@@ -3,7 +3,7 @@
 # Records an asciinema cast showing the WASI Component Model / WIT workflow.
 #
 # Prerequisites:
-#   - Server running:  bun run dev
+#   - Server running:  pnpm run dev
 #   - ATPROTO_IDENTIFIER + ATPROTO_PASSWORD in .env
 #   - wasm-tools installed:  brew install wasm-tools
 #   - Rust wasm32-wasip1 target:  rustup target add wasm32-wasip1
@@ -20,7 +20,7 @@ set -a
 source "$(dirname "$0")/../.env"
 set +a
 
-REPO_DID=$(bun -e "
+REPO_DID=$(node -e "
 const { AtpAgent } = require('@atproto/api');
 const a = new AtpAgent({ service: process.env.ATPROTO_SERVICE ?? 'https://bsky.social' });
 a.login({ identifier: process.env.ATPROTO_IDENTIFIER, password: process.env.ATPROTO_PASSWORD })
@@ -43,10 +43,10 @@ pause() { sleep "${1:-1.5}"; }
 
 # ── Silent setup: upload & register the component ────────────────────────────
 
-blob=$(bun scripts/upload-function.ts "$WASM_OUT" 2>/dev/null \
+blob=$(pnpm exec tsx scripts/upload-function.ts "$WASM_OUT" 2>/dev/null \
   | awk '/^\{/,/^\}/' | tr -d '\n')
 
-bun scripts/create-function-record.ts \
+pnpm exec tsx scripts/create-function-record.ts \
   --name "component-lister" \
   --version "0.1.0" \
   --mode "component-v1" \
@@ -91,15 +91,15 @@ echo; pause 2
 echo
 type_text "# Upload the component WASM blob to AT Protocol"
 echo; pause 0.8
-type_text "bun scripts/upload-function.ts $WASM_OUT"
+type_text "pnpm exec tsx scripts/upload-function.ts $WASM_OUT"
 echo; pause 0.5
-bun scripts/upload-function.ts "$WASM_OUT" 2>/dev/null | awk '/^\{/,/^\}/'
+pnpm exec tsx scripts/upload-function.ts "$WASM_OUT" 2>/dev/null | awk '/^\{/,/^\}/'
 pause 2
 
 echo
 type_text "# Register an at.functions.metadata record pointing at the blob"
 echo; pause 0.8
-type_text "bun scripts/create-function-record.ts --mode component-v1 --rkey component-lister-v1 ..."
+type_text "pnpm exec tsx scripts/create-function-record.ts --mode component-v1 --rkey component-lister-v1 ..."
 echo; pause 1.5
 echo "  → at://$REPO_DID/at.functions.metadata/component-lister-v1"
 pause 2
@@ -107,11 +107,11 @@ pause 2
 echo
 type_text "# Invoke via XRPC — server fetches record + blob, transpiles with jco, runs"
 echo; pause 0.8
-type_text "bun scripts/invoke.ts --function \"$FUNCTION_URI\" \\"
+type_text "pnpm exec tsx scripts/invoke.ts --function \"$FUNCTION_URI\" \\"
 echo
 type_text "  --input '{\"repo\":\"$REPO_DID\",\"collection\":\"app.bsky.feed.post\",\"limit\":3}'"
 echo; pause 0.6
-bun scripts/invoke.ts \
+pnpm exec tsx scripts/invoke.ts \
   --function "$FUNCTION_URI" \
   --input "{\"repo\":\"$REPO_DID\",\"collection\":\"app.bsky.feed.post\",\"limit\":3}"
 pause 4

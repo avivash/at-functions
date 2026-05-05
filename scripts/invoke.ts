@@ -1,7 +1,7 @@
 // Invoke a registered AT Function via the local server.
 //
 // Usage:
-//   bun scripts/invoke.ts \
+//   pnpm exec tsx scripts/invoke.ts \
 //     --function "at://did:plc:.../at.functions.metadata/echo-v1" \
 //     --input '{"hello":"world"}'
 //
@@ -20,7 +20,7 @@ const inputStr = arg("--input") ?? "{}";
 
 if (!functionUri) {
   console.error(
-    'Usage: bun scripts/invoke.ts --function "at://..." --input \'{"key":"value"}\''
+    'Usage: pnpm exec tsx scripts/invoke.ts --function "at://..." --input \'{"key":"value"}\''
   );
   process.exit(1);
 }

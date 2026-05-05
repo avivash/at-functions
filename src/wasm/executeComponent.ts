@@ -5,10 +5,9 @@
  * process (componentRunner.mjs) that uses jco's programmatic transpile API.
  *
  * Why a child process?
- *   jco uses native Node.js internals (worker threads, tcp_wrap, etc.) that
- *   are not fully supported by Bun. Running jco inside a real `node` process
- *   avoids these compatibility issues while keeping the rest of the server
- *   on Bun.
+ *   jco uses Node.js internals (worker threads, tcp_wrap, etc.) that work best
+ *   under a dedicated `node` process. We isolate it to keep the main server
+ *   process simple and to avoid coupling the runtime to jco’s constraints.
  *
  * Protocol with child process:
  *   stdin  → JSON: { wasmBase64: string, inputJson: string }
@@ -19,7 +18,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 // Resolve path to the runner script relative to this source file.
-// Works both with `bun run dev` (source tree) and compiled `dist/`.
+// Works both in dev (source tree) and compiled `dist/`.
 const RUNNER_PATH = fileURLToPath(
   new URL("./componentRunner.mjs", import.meta.url)
 );

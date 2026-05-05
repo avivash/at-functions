@@ -3,12 +3,14 @@
 #   docker buildx build --target ui-artifact --output type=local,dest=./ui-out .
 # Build-args bake PUBLIC_* into the client bundle (set for production).
 # =============================================================================
-FROM oven/bun:1.2 AS ui-build
+FROM node:22-slim AS ui-build
 
 WORKDIR /app/ui
 
-COPY ui/package.json ui/bun.lock ./
-RUN bun install --frozen-lockfile
+RUN corepack enable && corepack prepare pnpm@10 --activate
+
+COPY ui/package.json ui/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY ui/ .
 
@@ -22,7 +24,7 @@ ENV PUBLIC_ATSEARCH_URL=$PUBLIC_ATSEARCH_URL \
     PUBLIC_AT_FUNCTIONS_API=$PUBLIC_AT_FUNCTIONS_API \
     PUBLIC_DEFAULT_FUNCTIONS_HANDLE=$PUBLIC_DEFAULT_FUNCTIONS_HANDLE
 
-RUN bun run build
+RUN pnpm run build
 
 FROM scratch AS ui-artifact
 COPY --from=ui-build /app/ui/build/ /
@@ -30,20 +32,14 @@ COPY --from=ui-build /app/ui/build/ /
 # =============================================================================
 # API — default image target (WASM runner + Fastify)
 # =============================================================================
-FROM oven/bun:1.2 AS api
+FROM node:22-slim AS api
 
-# Install Node.js 22 (required for componentRunner.mjs child process — jco uses
-# Node.js internals not supported by Bun, so component-v1 execution spawns node)
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
+RUN corepack enable && corepack prepare pnpm@10 --activate
 
 WORKDIR /app
 
-COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
@@ -52,4 +48,6 @@ ENV HOST=0.0.0.0
 
 EXPOSE 3000
 
-CMD ["bun", "src/server.ts"]
+RUN pnpm run build
+
+CMD ["node", "dist/server.js"]

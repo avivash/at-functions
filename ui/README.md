@@ -15,7 +15,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-bun x sv@0.15.1 create --template minimal --types ts --install bun ui
+pnpm dlx sv@0.15.1 create --template minimal --types ts --install pnpm ui
 ```
 
 ## Developing

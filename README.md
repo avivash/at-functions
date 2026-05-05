@@ -105,7 +105,7 @@ wasm-tools component new \
 **Invoking:**
 
 ```bash
-bun scripts/invoke.ts \
+pnpm exec tsx scripts/invoke.ts \
   --function "at://did:plc:yourDID/at.functions.metadata/component-lister-v1" \
   --input '{"repo":"did:plc:yourDID","collection":"app.bsky.feed.post","limit":5}'
 ```
@@ -181,14 +181,15 @@ at-functions/
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) 1.2+
+- Node.js 22+
+- pnpm 10+ (or `corepack enable`)
 - [Rust + wasm32-unknown-unknown target](https://www.rust-lang.org/tools/install) (for Rust examples)
 - A Bluesky / AT Proto account + app password (for uploading functions)
 
 ### Install
 
 ```bash
-bun install
+pnpm install
 ```
 
 ### Environment
@@ -201,8 +202,8 @@ cp .env.example .env
 ### Run the server
 
 ```bash
-bun run dev          # development (watch)
-bun run build && bun start   # production
+pnpm run dev          # development (watch)
+pnpm run build && pnpm start   # production
 ```
 
 The server starts on `http://localhost:3000`.
@@ -236,7 +237,7 @@ cargo build --target wasm32-unknown-unknown --release
 
 ```bash
 ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=your-app-password \
-  bun scripts/upload-function.ts \
+  pnpm exec tsx scripts/upload-function.ts \
     examples/pure-rust/target/wasm32-unknown-unknown/release/pure_echo.wasm
 ```
 
@@ -246,7 +247,7 @@ Note the blob JSON printed at the end — you'll use it in the next step.
 
 ```bash
 ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=your-app-password \
-  bun scripts/create-function-record.ts \
+  pnpm exec tsx scripts/create-function-record.ts \
     --name "echo" \
     --version "0.1.0" \
     --mode "pure-v1" \
@@ -261,10 +262,10 @@ The script prints the `at://` URI for the record.
 
 ```bash
 # Start the server first (in another terminal):
-bun run dev
+pnpm run dev
 
 # Then invoke:
-bun scripts/invoke.ts \
+pnpm exec tsx scripts/invoke.ts \
   --function "at://did:plc:yourDID/at.functions.metadata/echo-v1" \
   --input '{"hello":"world","num":42}'
 ```
@@ -284,7 +285,7 @@ Expected response:
 Upload and register `host_lister.wasm` with `--mode "host-v1"`, then invoke:
 
 ```bash
-bun scripts/invoke.ts \
+pnpm exec tsx scripts/invoke.ts \
   --function "at://did:plc:yourDID/at.functions.metadata/lister-v1" \
   --input '{"repo":"did:plc:yourDID","collection":"app.bsky.feed.post","limit":5}'
 ```
@@ -329,7 +330,7 @@ On failure: `ok: false, error: "reason"`.
 ## Tests
 
 ```bash
-bun test
+pnpm test
 ```
 
 Tests cover:

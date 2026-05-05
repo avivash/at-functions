@@ -2,7 +2,7 @@
 //
 // Usage (fill in the blob JSON from upload-function.ts output):
 //   ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=xxx \
-//     bun scripts/create-function-record.ts \
+//     pnpm exec tsx scripts/create-function-record.ts \
 //       --name "echo" \
 //       --version "0.1.0" \
 //       --mode "pure-v1" \
@@ -80,5 +80,5 @@ console.log("CID:", data.cid);
 console.log();
 console.log(`Invoke with:`);
 console.log(
-  `  bun scripts/invoke.ts --function "${data.uri}" --input '{"hello":"world"}'`
+  `  pnpm exec tsx scripts/invoke.ts --function "${data.uri}" --input '{"hello":"world"}'`
 );

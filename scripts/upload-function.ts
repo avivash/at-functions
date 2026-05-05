@@ -2,14 +2,14 @@
 //
 // Usage:
 //   ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=xxx \
-//     bun scripts/upload-function.ts path/to/function.wasm
+//     pnpm exec tsx scripts/upload-function.ts path/to/function.wasm
 
 import { readFileSync } from "node:fs";
 import { AtpAgent } from "@atproto/api";
 
 const [, , wasmPath] = process.argv;
 if (!wasmPath) {
-  console.error("Usage: bun scripts/upload-function.ts <path-to.wasm>");
+  console.error("Usage: pnpm exec tsx scripts/upload-function.ts <path-to.wasm>");
   process.exit(1);
 }
 

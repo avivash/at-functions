@@ -116,7 +116,7 @@ describe.skip("executeHost integration (requires network + compiled WASM)", () =
     // To run this test manually:
     // 1. Compile examples/host-rust: cargo build --target wasm32-unknown-unknown --release
     // 2. Set ATPROTO_SERVICE env var
-    // 3. Run: bun test --test-name-pattern "host integration"
+    // 3. Run: pnpm test --testNamePattern "host integration"
     expect(true).toBe(true);
   });
 });

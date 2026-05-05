@@ -10,7 +10,7 @@ set -a
 source "$(dirname "$0")/../.env"
 set +a
 
-REPO_DID=$(bun -e "
+REPO_DID=$(node -e "
 const { AtpAgent } = require('@atproto/api');
 const a = new AtpAgent({ service: process.env.ATPROTO_SERVICE ?? 'https://bsky.social' });
 a.login({ identifier: process.env.ATPROTO_IDENTIFIER, password: process.env.ATPROTO_PASSWORD })
@@ -34,9 +34,9 @@ pause() { sleep "${1:-1.5}"; }
 upload_and_register() {
   local wasm="$1" mode="$2" rkey="$3" name="$4" max_ms="${5:-100}"
   local blob
-  blob=$(bun scripts/upload-function.ts "$wasm" 2>/dev/null \
+  blob=$(pnpm exec tsx scripts/upload-function.ts "$wasm" 2>/dev/null \
     | awk '/^\{/,/^\}/' | tr -d '\n')
-  bun scripts/create-function-record.ts \
+  pnpm exec tsx scripts/create-function-record.ts \
     --name "$name" --version "0.1.0" --mode "$mode" --rkey "$rkey" \
     --maxDurationMs "$max_ms" \
     --blob "$blob" > /dev/null 2>&1
@@ -71,9 +71,9 @@ pause 2
 echo
 type "# 2. Invoke the pure-v1 echo function"
 echo; pause 0.8
-type "bun scripts/invoke.ts --function \"$FUNCTION_PURE\" --input '{\"hello\":\"world\",\"num\":42}'"
+type "pnpm exec tsx scripts/invoke.ts --function \"$FUNCTION_PURE\" --input '{\"hello\":\"world\",\"num\":42}'"
 echo; pause 0.6
-bun scripts/invoke.ts \
+pnpm exec tsx scripts/invoke.ts \
   --function "$FUNCTION_PURE" \
   --input '{"hello":"world","num":42}'
 pause 3
@@ -81,9 +81,9 @@ pause 3
 echo
 type "# 3. Invoke the host-v1 function (reads live AT Proto data)"
 echo; pause 0.8
-type "bun scripts/invoke.ts --function \"$FUNCTION_HOST\" --input '{\"repo\":\"$REPO_DID\",\"collection\":\"app.bsky.feed.post\",\"limit\":3}'"
+type "pnpm exec tsx scripts/invoke.ts --function \"$FUNCTION_HOST\" --input '{\"repo\":\"$REPO_DID\",\"collection\":\"app.bsky.feed.post\",\"limit\":3}'"
 echo; pause 0.6
-bun scripts/invoke.ts \
+pnpm exec tsx scripts/invoke.ts \
   --function "$FUNCTION_HOST" \
   --input "{\"repo\":\"$REPO_DID\",\"collection\":\"app.bsky.feed.post\",\"limit\":3}"
 pause 3

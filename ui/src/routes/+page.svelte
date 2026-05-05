@@ -45,6 +45,10 @@
   let dark = $state(true);
   let modeFilter = $state<Mode | "all">("all");
   let copiedUri = $state<string | null>(null);
+  let crawlHostname = $state("");
+  let crawlStatus = $state<"idle" | "submitting" | "ok" | "error">("idle");
+  let crawlMessage = $state<string>("");
+  let crawlSheetOpen = $state(false);
 
   // Per-card playground state
   let playgrounds = $state<
@@ -62,6 +66,10 @@
 
   function pgState(uri: string) {
     return playgrounds[uri];
+  }
+
+  function safeIdFromUri(uri: string): string {
+    return uri.replace(/[^a-z0-9_-]+/gi, "-").slice(0, 80);
   }
 
   let results = $derived(
@@ -169,6 +177,54 @@
       if (row) out.push(row);
     }
     return out;
+  }
+
+  async function submitCrawl() {
+    if (!ATSEARCH_URL) return;
+    const hostname = crawlHostname.trim();
+    if (!hostname) return;
+    crawlStatus = "submitting";
+    crawlMessage = "";
+    try {
+      const res = await fetch(`${ATSEARCH_URL}/crawl`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ hostname }),
+      });
+      const text = await res.text().catch(() => "");
+      if (!res.ok) {
+        crawlStatus = "error";
+        crawlMessage = text
+          ? text.slice(0, 200)
+          : `Request failed (${res.status})`;
+        return;
+      }
+      crawlStatus = "ok";
+      crawlMessage = "Submitted. Indexing may take a few minutes.";
+      crawlHostname = "";
+      crawlSheetOpen = false;
+    } catch (e) {
+      crawlStatus = "error";
+      crawlMessage = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  function closeCrawlSheet() {
+    crawlSheetOpen = false;
+  }
+
+  function onCrawlKeydown(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeCrawlSheet();
+    }
+    if (
+      e.key === "Enter" &&
+      (e.target as HTMLElement | null)?.tagName === "INPUT"
+    ) {
+      e.preventDefault();
+      void submitCrawl();
+    }
   }
 
   async function fetchFunctions(
@@ -410,9 +466,84 @@
               onclick={() => (modeFilter = f.value)}>{f.label}</button
             >
           {/each}
+
+          {#if ATSEARCH_URL}
+            <button
+              class="filter-btn crawl-open"
+              onclick={() => (crawlSheetOpen = true)}
+            >
+              <svg
+                class="plus"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M10 4v12M4 10h12" stroke-linecap="round" />
+              </svg>
+              Add PDS
+            </button>
+          {/if}
         </div>
       {/if}
     </div>
+
+    {#if ATSEARCH_URL && crawlSheetOpen}
+      <div class="sheet-backdrop" role="presentation" onclick={closeCrawlSheet}>
+        <div
+          class="sheet"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Add your PDS to the catalog"
+          onclick={(e) => e.stopPropagation()}
+          onkeydown={onCrawlKeydown}
+          tabindex="-1"
+        >
+          <div class="sheet-head">
+            <div class="sheet-title">Add your PDS</div>
+            <button
+              class="sheet-close"
+              aria-label="Close"
+              onclick={closeCrawlSheet}>×</button
+            >
+          </div>
+
+          <div class="sheet-body">
+            <div class="sheet-hint">
+              Enter the PDS <span class="mono">hostname</span> only (no
+              <span class="mono">https://</span>).
+            </div>
+
+            <div class="crawl-row sheet-row">
+              <input
+                class="crawl-input"
+                type="text"
+                placeholder="pds.example.com"
+                bind:value={crawlHostname}
+                spellcheck="false"
+                autocomplete="off"
+                onkeydown={onCrawlKeydown}
+              />
+              <button
+                class="crawl-submit"
+                onclick={submitCrawl}
+                disabled={crawlStatus === "submitting" || !crawlHostname.trim()}
+              >
+                {crawlStatus === "submitting" ? "Submitting…" : "Submit"}
+              </button>
+            </div>
+
+            {#if crawlStatus === "ok"}
+              <div class="crawl-msg ok">{crawlMessage}</div>
+            {:else if crawlStatus === "error"}
+              <div class="crawl-msg err">
+                {crawlMessage || "Submission failed."}
+              </div>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
 
     {#if error}
       <div class="layout-narrow">
@@ -475,9 +606,13 @@
 
             {#if pg.open}
               <div class="playground">
-                <label class="pg-label">Input JSON</label>
+                <label
+                  class="pg-label"
+                  for={"pg-input-" + safeIdFromUri(fn.uri)}>Input JSON</label
+                >
                 <textarea
                   class="pg-input"
+                  id={"pg-input-" + safeIdFromUri(fn.uri)}
                   bind:value={pg.input}
                   rows={4}
                   spellcheck="false"
@@ -686,6 +821,170 @@
     gap: 0.4rem;
     margin-bottom: 1.25rem;
     flex-wrap: wrap;
+  }
+
+  /* ── Crawl submission (sheet) ── */
+  .filters {
+    align-items: center;
+  }
+
+  .filter-btn.crawl-open {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .filter-btn.crawl-open .plus {
+    width: 14px;
+    height: 14px;
+    opacity: 0.9;
+  }
+
+  .crawl-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .sheet-row {
+    margin-top: 0.75rem;
+  }
+
+  .crawl-input {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.65rem 0.75rem;
+    color: var(--text);
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .crawl-input::placeholder {
+    color: var(--placeholder);
+  }
+  .crawl-submit {
+    border: 1px solid var(--border);
+    background: var(--copy-bg);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 650;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+    white-space: nowrap;
+  }
+  .crawl-submit:hover:not(:disabled) {
+    background: var(--copy-hover);
+    border-color: var(--border-hover);
+  }
+  .crawl-submit:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .crawl-hint,
+  .crawl-msg {
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--text-2);
+  }
+  .crawl-msg.ok {
+    color: #34d399;
+  }
+  .crawl-msg.err {
+    color: #f87171;
+  }
+  .mono {
+    font-family: monospace;
+  }
+
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    justify-content: flex-end;
+    z-index: 60;
+    animation: backdrop-in 0.16s ease-out;
+  }
+
+  .sheet {
+    width: min(420px, 92vw);
+    height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border-card);
+    padding: 1rem 1rem 1.25rem;
+    box-shadow: -20px 0 60px rgba(0, 0, 0, 0.35);
+    animation: sheet-in 0.16s ease-out;
+  }
+
+  .dark .sheet-backdrop {
+    background: rgba(0, 0, 0, 0.62);
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .sheet-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .sheet-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--border-card);
+    background: var(--copy-bg);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+  }
+  .sheet-close:hover {
+    background: var(--copy-hover);
+    border-color: var(--border-hover);
+  }
+
+  .sheet-body {
+    margin-top: 0.85rem;
+  }
+
+  .sheet-hint {
+    font-size: 0.82rem;
+    color: var(--text-2);
+  }
+
+  @keyframes sheet-in {
+    from {
+      transform: translateX(18px);
+      opacity: 0.65;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .filter-btn {

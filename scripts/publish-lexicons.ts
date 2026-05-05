@@ -2,7 +2,7 @@
 //
 // Usage:
 //   ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=xxx \
-//     bun scripts/publish-lexicons.ts
+//     pnpm exec tsx scripts/publish-lexicons.ts
 //
 // Optional:
 //   ATPROTO_SERVICE=https://bsky.social

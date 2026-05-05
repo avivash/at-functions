@@ -18,3 +18,7 @@ examples/*/target
 .cursorrules
 .claude
 .DS_Store
+
+# pnpm store (local cache)
+.pnpm-store/
+**/.pnpm-store/

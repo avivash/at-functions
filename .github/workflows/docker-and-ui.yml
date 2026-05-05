@@ -40,9 +40,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
         with:
-          bun-version: "1.2.2"
+          node-version: "22"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10"
 
       - name: Install and build
         env:
@@ -51,8 +55,8 @@ jobs:
           PUBLIC_AT_FUNCTIONS_API: ${{ vars.PUBLIC_AT_FUNCTIONS_API }}
           PUBLIC_DEFAULT_FUNCTIONS_HANDLE: ${{ vars.PUBLIC_DEFAULT_FUNCTIONS_HANDLE }}
         run: |
-          bun install --frozen-lockfile
-          bun run build
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - uses: actions/upload-artifact@v4
         with:

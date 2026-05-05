@@ -6,9 +6,9 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "dev": "bun --watch src/server.ts",
-    "start": "bun dist/server.js",
-    "test": "bun test"
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "@atproto/api": "^0.13.33",
@@ -18,7 +18,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
-    "bun-types": "^1.2.0",
-    "typescript": "^5.8.3"
-  }
+    "tsx": "^4.20.5",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "packageManager": "pnpm@10.27.0"
 }
