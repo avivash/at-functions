@@ -187,7 +187,7 @@
 
   async function submitCrawl() {
     if (!ATSEARCH_URL) return;
-    const hostname = crawlHostname.trim();
+    const hostname = normalizePdsHostname(crawlHostname);
     if (!hostname) return;
     crawlStatus = "submitting";
     crawlMessage = "";
@@ -213,6 +213,26 @@
       crawlStatus = "error";
       crawlMessage = e instanceof Error ? e.message : String(e);
     }
+  }
+
+  function normalizePdsHostname(input: string): string {
+    let s = input.trim();
+    if (!s) return "";
+    // Allow users to paste full URLs like https://pds.example.com/xrpc
+    try {
+      if (/^https?:\/\//i.test(s)) {
+        const u = new URL(s);
+        s = u.hostname;
+      }
+    } catch {
+      // fall through to best-effort parsing
+    }
+    // Strip anything after first slash (paths) and any port
+    s = s.split("/")[0] ?? s;
+    s = s.split(":")[0] ?? s;
+    // Remove leading @ if someone pastes it like @host
+    s = s.replace(/^@+/, "");
+    return s.trim().toLowerCase();
   }
 
   function closeCrawlSheet() {
