@@ -359,59 +359,59 @@
         </button>
       </header>
 
-    <div class="search-wrap">
-      <svg
-        class="icon-search"
-        viewBox="0 0 20 20"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-      >
-        <circle cx="8.5" cy="8.5" r="5.5" />
-        <path d="M15 15l-3-3" stroke-linecap="round" />
-      </svg>
-      <input
-        type="text"
-        placeholder="Search..."
-        bind:value={query}
-        onkeydown={onKeydown}
-        spellcheck="false"
-        autocomplete="off"
-      />
-      {#if query}
-        <button class="btn-icon" onclick={clear} aria-label="Clear">×</button>
-      {/if}
-      <button class="btn-icon btn-arrow" aria-label="Go" disabled>
+      <div class="search-wrap">
         <svg
+          class="icon-search"
           viewBox="0 0 20 20"
           fill="none"
           stroke="currentColor"
           stroke-width="1.8"
         >
-          <path
-            d="M4 10h12M11 5l5 5-5 5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
+          <circle cx="8.5" cy="8.5" r="5.5" />
+          <path d="M15 15l-3-3" stroke-linecap="round" />
         </svg>
-      </button>
-    </div>
-
-    <!-- Mode filters -->
-    {#if all.length > 0}
-      <div class="filters">
-        {#each filters as f}
-          <button
-            class="filter-btn"
-            class:active={modeFilter === f.value}
-            class:filter-pure={f.value === "pure-v1"}
-            class:filter-host={f.value === "host-v1"}
-            class:filter-component={f.value === "component-v1"}
-            onclick={() => (modeFilter = f.value)}>{f.label}</button
+        <input
+          type="text"
+          placeholder="Search..."
+          bind:value={query}
+          onkeydown={onKeydown}
+          spellcheck="false"
+          autocomplete="off"
+        />
+        {#if query}
+          <button class="btn-icon" onclick={clear} aria-label="Clear">×</button>
+        {/if}
+        <button class="btn-icon btn-arrow" aria-label="Go" disabled>
+          <svg
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
           >
-        {/each}
+            <path
+              d="M4 10h12M11 5l5 5-5 5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
       </div>
-    {/if}
+
+      <!-- Mode filters -->
+      {#if all.length > 0}
+        <div class="filters">
+          {#each filters as f}
+            <button
+              class="filter-btn"
+              class:active={modeFilter === f.value}
+              class:filter-pure={f.value === "pure-v1"}
+              class:filter-host={f.value === "host-v1"}
+              class:filter-component={f.value === "component-v1"}
+              onclick={() => (modeFilter = f.value)}>{f.label}</button
+            >
+          {/each}
+        </div>
+      {/if}
     </div>
 
     {#if error}
@@ -582,7 +582,7 @@
 
   .layout-narrow {
     width: 100%;
-    max-width: 720px;
+    /* max-width: 720px; */
     margin-inline: auto;
   }
 
