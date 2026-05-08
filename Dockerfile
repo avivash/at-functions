@@ -50,4 +50,7 @@ EXPOSE 3000
 
 RUN pnpm run build
 
+# Runtime: avoid Fastify trying to load `pino-pretty` (not installed); server uses JSON logs.
+ENV NODE_ENV=production
+
 CMD ["node", "dist/server.js"]

@@ -17,8 +17,24 @@ const server = Fastify({
   bodyLimit: 1024 * 1024, // 1 MB request body limit
 });
 
+/** Browser Origin header values allowed to call this API (cross-origin from the UI). */
+const FUNCTIONS_AT_ORIGIN_RE = /^https:\/\/([\w-]+\.)*functions\.at$/;
+
+const EXTRA_CORS_ORIGINS = (process.env.ATFUNCTIONS_CORS_ORIGINS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function isAllowedCorsOrigin(origin: string | undefined): boolean {
+  if (!origin) return false;
+  if (EXTRA_CORS_ORIGINS.includes(origin)) return true;
+  return FUNCTIONS_AT_ORIGIN_RE.test(origin);
+}
+
 await server.register(cors, {
-  origin: ["https://functions.at", /\.functions\.at$/],
+  origin: (origin, cb) => cb(null, isAllowedCorsOrigin(origin)),
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
 });
 
 await server.register(runRoute);

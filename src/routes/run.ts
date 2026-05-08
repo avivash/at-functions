@@ -84,7 +84,7 @@ const runRoute: FastifyPluginAsync = async (fastify) => {
         });
       } catch (err) {
         const error = err instanceof Error ? err.message : String(err);
-        request.log.warn({ error, functionUri }, "Function execution failed");
+        request.log.warn({ err, functionUri }, "Function execution failed");
         return reply.status(200).send({
           ok: false,
           error,
