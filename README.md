@@ -255,7 +255,7 @@ ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=your-app-password \
     --description "Echoes the input JSON back to you." \
     --inputSchema '{"type":"object","properties":{"hello":{"type":"string"},"num":{"type":"number"}},"required":["hello"],"additionalProperties":true}' \
     --outputSchema '{"type":"object","properties":{"ok":{"type":"boolean"},"echo":{"type":"object"}},"required":["ok","echo"]}' \
-    --blob '{"$type":"blob","ref":{"$link":"bafk..."},"mimeType":"application/wasm","size":12345}'
+    --blob '<paste the full JSON blob object printed by scripts/upload-function.ts>'
 ```
 
 This creates an `at.functions.metadata` record on your AT Proto repo.

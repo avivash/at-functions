@@ -86,3 +86,29 @@ export interface HostListCollectionOutput {
   cursor?: string;
   error?: string;
 }
+
+// ── Workflow types ────────────────────────────────────────────────────────────
+
+export interface WorkflowStep {
+  id: string;
+  function: string;        // AT URI → at.functions.metadata record
+  input?: unknown;         // JSON object; string values may contain {{$.x.y}} templates
+  description?: string;
+}
+
+export interface WorkflowRecord {
+  $type: "at.functions.workflow";
+  name: string;
+  version: string;
+  description?: string;
+  steps: WorkflowStep[];
+  maxDurationMs?: number;
+}
+
+export interface WorkflowStepResult {
+  id: string;
+  ok: boolean;
+  output?: unknown;
+  error?: string;
+  durationMs: number;
+}

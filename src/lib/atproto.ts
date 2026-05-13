@@ -1,5 +1,5 @@
 import { AtpAgent } from "@atproto/api";
-import type { AtUri, FunctionRecord } from "./types.js";
+import type { AtUri, FunctionRecord, WorkflowRecord } from "./types.js";
 
 const SERVICE_URL = process.env.ATPROTO_SERVICE ?? "https://bsky.social";
 const MAX_BLOB_BYTES = parseInt(process.env.MAX_BLOB_BYTES ?? "5242880", 10);
@@ -165,4 +165,34 @@ export async function listCollection(
 
 export async function fetchBlobByCid(cid: string, repo: string): Promise<Uint8Array> {
   return fetchBlob(repo, cid);
+}
+
+export async function fetchWorkflowRecord(
+  atUri: string,
+): Promise<{ record: WorkflowRecord; cid: string }> {
+  const { repo, collection, rkey } = parseAtUri(atUri);
+
+  if (collection !== "at.functions.workflow") {
+    throw new Error(`URI must point to at.functions.workflow collection, got: ${collection}`);
+  }
+
+  const agent = await getAgentForRepo(repo);
+  const response = await agent.com.atproto.repo.getRecord({ repo, collection, rkey });
+  const record = response.data.value as WorkflowRecord;
+  const cid = response.data.cid ?? "";
+
+  if (!Array.isArray(record.steps) || record.steps.length === 0) {
+    throw new Error("Workflow record missing required 'steps' array");
+  }
+
+  return { record, cid };
+}
+
+/** Detect whether an AT URI points to a workflow vs a function record without fetching it. */
+export function isWorkflowUri(atUri: string): boolean {
+  try {
+    return parseAtUri(atUri).collection === "at.functions.workflow";
+  } catch {
+    return false;
+  }
 }

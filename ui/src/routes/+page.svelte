@@ -413,8 +413,11 @@
     return uri.split("/").at(-1) ?? uri;
   }
 
+  let showWorkflowLink = $state(false);
+
   onMount(() => {
     if (!ATSEARCH_URL) void load();
+    showWorkflowLink = new URLSearchParams(window.location.search).get("workflow") === "yeppp";
   });
 
   $effect(() => {
@@ -438,11 +441,15 @@
     <div class="layout-narrow">
       <header>
         <span class="wordmark">AT Functions</span>
-        <button
-          class="theme-toggle"
-          onclick={toggleTheme}
-          aria-label="Toggle theme"
-        >
+        <div class="header-right">
+          {#if showWorkflowLink}
+            <a href="/workflow" class="workflow-link">Build workflow →</a>
+          {/if}
+          <button
+            class="theme-toggle"
+            onclick={toggleTheme}
+            aria-label="Toggle theme"
+          >
           {#if dark}
             <svg
               viewBox="0 0 24 24"
@@ -471,6 +478,7 @@
             </svg>
           {/if}
         </button>
+        </div>
       </header>
 
       <div class="search-wrap">
@@ -800,6 +808,24 @@
     justify-content: space-between;
     padding: 3rem 0 1.5rem;
   }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .workflow-link {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-2);
+    text-decoration: none;
+    padding: 0.3em 0.75em;
+    border: 1px solid var(--border-card);
+    border-radius: 20px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .workflow-link:hover { color: var(--text); border-color: var(--border-hover); }
 
   .wordmark {
     font-size: 0.95rem;

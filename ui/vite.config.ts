@@ -6,6 +6,8 @@ const PUBLIC_KEYS = [
 	'PUBLIC_AT_FUNCTIONS_API',
 	'PUBLIC_ATSEARCH_URL',
 	'PUBLIC_DEFAULT_FUNCTIONS_HANDLE',
+	'PUBLIC_OAUTH_CLIENT_ID',
+	'PUBLIC_OAUTH_REDIRECT_URI',
 ] as const;
 
 function publicDefine(mode: string) {
@@ -31,5 +33,6 @@ export default defineConfig(({ mode }) => ({
 	define: publicDefine(mode),
 	server: {
 		port: 5200,
+		allowedHosts: ['ccee-84-39-151-176.ngrok-free.app'],
 	},
 }));

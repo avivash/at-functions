@@ -1,0 +1,48 @@
+{
+  "lexicon": 1,
+  "id": "at.functions.workflow",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "description": "A named workflow that chains AT Functions, passing outputs as inputs between steps.",
+      "record": {
+        "type": "object",
+        "required": ["name", "version", "steps"],
+        "properties": {
+          "name":        { "type": "string", "maxLength": 128 },
+          "version":     { "type": "string", "maxLength": 32 },
+          "description": { "type": "string", "maxLength": 1024 },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": { "type": "ref", "ref": "#step" }
+          },
+          "maxDurationMs": { "type": "integer", "minimum": 100, "maximum": 300000 }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "function"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Unique identifier for this step; used to reference its output in subsequent steps via {{$.id.field}}."
+        },
+        "function": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT URI of the at.functions.metadata record to invoke."
+        },
+        "input": {
+          "type": "unknown",
+          "description": "JSON object whose string values may contain {{$.input.x}} or {{$.stepId.x}} templates."
+        },
+        "description": { "type": "string", "maxLength": 256 }
+      }
+    }
+  }
+}

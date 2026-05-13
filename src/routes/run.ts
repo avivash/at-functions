@@ -1,10 +1,38 @@
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from "fastify";
-import { fetchFunctionRecord, fetchBlob, parseAtUri } from "../lib/atproto.js";
+import { fetchFunctionRecord, fetchBlob, parseAtUri, fetchWorkflowRecord, isWorkflowUri } from "../lib/atproto.js";
 import { executePure } from "../wasm/executePure.js";
 import { executeHost } from "../wasm/executeHost.js";
 import { executeComponent } from "../wasm/executeComponent.js";
+import { executeWorkflow } from "../wasm/executeWorkflow.js";
 import { runRequestSchema, runResponseSchema } from "../lib/schemas.js";
 import type { RunRequest, RunResponse } from "../lib/types.js";
+
+/** Rough check for a real base32 CID (not README placeholders like `bafk...`). */
+function looksLikeAtprotoBlobCid(cid: string): boolean {
+  const s = cid.trim();
+  if (s.length < 48 || s.includes("..")) return false;
+  return /^b[a-z2-7]+$/.test(s);
+}
+
+function wasmBlobCidFromRecordCode(code: unknown): string | undefined {
+  if (!code || typeof code !== "object") return undefined;
+  const c = code as Record<string, unknown>;
+
+  // Legacy blob ref: top-level `cid` string
+  if (typeof c.cid === "string") return c.cid.trim();
+
+  const ref = c.ref;
+  if (typeof ref === "string") return ref.trim();
+  if (typeof ref === "object" && ref !== null) {
+    const r = ref as Record<string, unknown>;
+    if (typeof r.$link === "string") return r.$link.trim();
+    if (typeof (r as { toString?: () => string }).toString === "function") {
+      const s = (r as { toString: () => string }).toString().trim();
+      if (s && !s.includes("[object ")) return s;
+    }
+  }
+  return undefined;
+}
 
 const runRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Body: RunRequest; Reply: RunResponse }>(
@@ -22,6 +50,29 @@ const runRoute: FastifyPluginAsync = async (fastify) => {
       let functionCid: string | undefined;
 
       try {
+        // ── Workflow dispatch ──────────────────────────────────────────────
+        if (isWorkflowUri(functionUri)) {
+          const { record: workflow, cid } = await fetchWorkflowRecord(functionUri);
+          functionCid = cid;
+
+          const maxMs = workflow.maxDurationMs ?? 60_000;
+          const result = await Promise.race([
+            executeWorkflow(workflow, input),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error(`Workflow timed out after ${maxMs}ms`)), maxMs),
+            ),
+          ]);
+
+          return reply.status(200).send({
+            ok: result.ok,
+            output: result.ok ? { steps: result.steps, output: result.output } : undefined,
+            error: result.error,
+            durationMs: result.durationMs,
+            functionCid,
+          });
+        }
+
+        // ── Function dispatch ──────────────────────────────────────────────
         // Resolve the function record from AT Proto
         const { record, cid } = await fetchFunctionRecord(functionUri);
         functionCid = cid;
@@ -38,19 +89,20 @@ const runRoute: FastifyPluginAsync = async (fastify) => {
           });
         }
 
-        // Extract blob CID — handle both JSON ({ ref: { $link } }) and
-        // CID object ({ ref: CID }) forms that the AT Proto SDK may return.
-        const ref = (record.code as unknown as Record<string, unknown>)?.ref;
-        const blobCid: string | undefined =
-          (ref as Record<string, unknown> | undefined)?.$link as string | undefined ??
-          (typeof (ref as { toString?: () => string } | undefined)?.toString === "function"
-            ? (ref as { toString: () => string }).toString()
-            : undefined);
+        const blobCid = wasmBlobCidFromRecordCode(record.code);
 
-        if (!blobCid || blobCid === "[object Object]") {
+        if (!blobCid) {
           return reply.status(400).send({
             ok: false,
-            error: "Function record has no blob CID",
+            error: "Function record has no WASM blob CID (expected code.ref.$link or legacy code.cid)",
+          });
+        }
+
+        if (!looksLikeAtprotoBlobCid(blobCid)) {
+          return reply.status(400).send({
+            ok: false,
+            error:
+              'Invalid WASM blob CID on this record (often a README placeholder such as "bafk..."). Re-upload the WASM and putRecord at.functions.metadata again.',
           });
         }
 
