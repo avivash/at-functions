@@ -22,6 +22,7 @@
   let session = $state<OAuthSession | null>(null);
   let did = $state("");
   let handle = $state("");
+  let pdsUrl = $state("");
 
   let authLoading = $state(true);
   let authError = $state("");
@@ -96,6 +97,10 @@
         `https://bsky.social/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(repoDid)}`,
       );
       const data = await res.json();
+      // Extract and store PDS URL from the DID document
+      const svcs: Array<{ id: string; serviceEndpoint: string }> = data?.didDoc?.service ?? [];
+      const pds = svcs.find((s) => s.id === "#atproto_pds");
+      if (pds?.serviceEndpoint) pdsUrl = pds.serviceEndpoint.replace(/\/$/, "");
       return data.handle ?? repoDid;
     } catch {
       return repoDid;
@@ -123,6 +128,7 @@
     session = null;
     did = "";
     handle = "";
+    pdsUrl = "";
     myFunctions = [];
   }
 
@@ -264,21 +270,17 @@
     savedUri = "";
     try {
       const rkey = rkeyFromName(wfName);
-      // Use the OAuth agent for authenticated putRecord (DPoP-bound)
-      const agent = session;
-      const res = await agent.fetchHandler(
-        `com.atproto.repo.putRecord`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            repo: did,
-            collection: WORKFLOW_COLLECTION,
-            rkey,
-            record: buildRecord(),
-          }),
-        }
-      );
+      const endpoint = `${pdsUrl}/xrpc/com.atproto.repo.putRecord`;
+      const res = await session.fetchHandler(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          repo: did,
+          collection: WORKFLOW_COLLECTION,
+          rkey,
+          record: buildRecord(),
+        }),
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as { message?: string }).message ?? `putRecord failed (${res.status})`);
