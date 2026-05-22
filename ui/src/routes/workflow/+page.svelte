@@ -24,6 +24,8 @@
   let handle = $state("");
   let pdsUrl = $state("");
 
+  const SESSION_DID_KEY = "at-functions-workflow-did";
+
   let authLoading = $state(true);
   let authError = $state("");
   let loginHandle = $state("");
@@ -69,6 +71,7 @@
           const result = await client.callback(params);
           session = result.session;
           did = result.session.did;
+          localStorage.setItem(SESSION_DID_KEY, did);
           handle = await resolveHandle(did);
         } catch (e) {
           authError = e instanceof Error ? e.message : "OAuth callback failed";
@@ -76,12 +79,18 @@
         // Clean URL (strip both hash and query string)
         window.history.replaceState({}, "", window.location.pathname);
       } else {
-        // Try to restore existing session
-        const restored = await client.restore(undefined).catch(() => null);
-        if (restored) {
-          session = restored;
-          did = restored.did;
-          handle = await resolveHandle(did);
+        // Try to restore existing session using stored DID
+        const storedDid = localStorage.getItem(SESSION_DID_KEY);
+        if (storedDid) {
+          const restored = await client.restore(storedDid).catch(() => null);
+          if (restored) {
+            session = restored;
+            did = restored.did;
+            handle = await resolveHandle(did);
+          } else {
+            // Session expired or revoked — clear stored DID
+            localStorage.removeItem(SESSION_DID_KEY);
+          }
         }
       }
     } catch (e) {
@@ -130,6 +139,7 @@
     handle = "";
     pdsUrl = "";
     myFunctions = [];
+    localStorage.removeItem(SESSION_DID_KEY);
   }
 
   // ── Available functions ───────────────────────────────────────────────────
