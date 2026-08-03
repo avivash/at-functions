@@ -149,9 +149,10 @@ All host functions are **read-only**. `limit` is clamped to 100.
 
 ```
 at-functions/
-├── lexicons/               AT Lexicon definitions
+├── lexicons/               AT Lexicon definitions (published — see "Lexicons" below)
 │   ├── at.functions.metadata.json
-│   └── at.functions.run.json
+│   ├── at.functions.run.json
+│   └── at.functions.workflow.json
 ├── src/
 │   ├── server.ts           Fastify entry point
 │   ├── routes/run.ts       POST /xrpc/at.functions.run
@@ -160,19 +161,28 @@ at-functions/
 │   │   ├── schemas.ts      JSON Schema for Fastify validation
 │   │   └── types.ts        TypeScript types
 │   └── wasm/
-│       ├── abi.ts          ptr/len packing, memory I/O helpers
-│       ├── executePure.ts  pure-v1 executor
-│       ├── executeHost.ts  host-v1 executor (worker thread coordinator)
-│       ├── hostWorker.mjs  worker thread: runs WASM, uses Atomics.wait
-│       ├── hostImports.ts  (reference) host import implementations
-│       └── moduleCache.ts  CID → compiled WebAssembly.Module cache
+│       ├── abi.ts               ptr/len packing, memory I/O helpers
+│       ├── executePure.ts       pure-v1 executor
+│       ├── executeHost.ts       host-v1 executor (worker thread coordinator)
+│       ├── hostWorker.mjs       worker thread: runs WASM, uses Atomics.wait
+│       ├── hostImports.ts       (reference) host import implementations
+│       ├── executeComponent.ts  component-v1 executor
+│       ├── componentHost.ts     typed WIT host implementation
+│       ├── componentRunner.mjs  component worker (jco transpilation)
+│       ├── executeWorkflow.ts   workflow executor
+│       └── moduleCache.ts       CID → compiled WebAssembly.Module cache
 ├── examples/
 │   ├── pure-rust/          Echo function (pure-v1)
-│   └── host-rust/          Collection lister (host-v1)
+│   ├── host-rust/          Collection lister (host-v1)
+│   └── component-rust/     WIT component (component-v1)
 └── scripts/
     ├── upload-function.ts
     ├── create-function-record.ts
-    └── invoke.ts
+    ├── deploy-function.ts
+    ├── publish-lexicons.ts
+    ├── invoke.ts
+    ├── demo.sh
+    └── demo-component.sh
 ```
 
 ---
@@ -391,9 +401,40 @@ POST /xrpc/at.functions.run
 
 ---
 
-## Lexicon definitions
+## Lexicons
 
-See [`lexicons/at.functions.metadata.json`](lexicons/at.functions.metadata.json) and [`lexicons/at.functions.run.json`](lexicons/at.functions.run.json).
+Schema definitions live in [`lexicons/`](lexicons/): [`at.functions.metadata`](lexicons/at.functions.metadata.json) (function records), [`at.functions.run`](lexicons/at.functions.run.json) (the XRPC run method), and [`at.functions.workflow`](lexicons/at.functions.workflow.json).
+
+### Published and resolvable on the network
+
+The lexicons are published as `com.atproto.lexicon.schema` records in the authority repo, so any AT Proto tool can resolve them from the bare NSID with no knowledge of this repo:
+
+- DNS: `_lexicon.functions.at` TXT → `did=did:plc:vsnj4aaxyatiht4spdht2q2t`
+- Records: `at://did:plc:vsnj4aaxyatiht4spdht2q2t/com.atproto.lexicon.schema/at.functions.*`
+
+Re-publish after changing a lexicon file (the record key is the NSID, so this is an idempotent upsert):
+
+```bash
+pnpm exec tsx scripts/publish-lexicons.ts
+```
+
+(Reads `ATPROTO_IDENTIFIER` / `ATPROTO_PASSWORD`; restrict with `LEXICON_IDS=at.functions.metadata`.)
+
+Verify resolution end-to-end with the official resolver:
+
+```js
+import { resolveLexicon } from '@atproto/lexicon-resolver'
+await resolveLexicon('at.functions.metadata') // → { uri, cid, lexicon }
+```
+
+### Discovery via AT Search
+
+Because the schema is published, schema-aware indexers can index `at.functions.metadata` records automatically. [AT Search](../at-search) indexes them off the firehose; searching for functions is one HTTP call against its query node — no PDS enumeration needed:
+
+```
+GET /search?q=type:at.functions.metadata          # list all indexed functions
+GET /search?q=resize+image+type:at.functions.metadata  # free-text within functions
+```
 
 ---
 
