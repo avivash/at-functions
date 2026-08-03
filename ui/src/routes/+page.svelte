@@ -116,7 +116,9 @@
       .replace(/\s*Max duration:\s*[^.\n]+\.?/gi, '')
       .replace(/\s*(Public|Private)\.?/gi, '')
       .replace(/\s*Allowed hosts:\s*[^.\n]+\.?/gi, '')
-      .replace(/\s*AT URI:\s*[^.\n]+\.?/gi, '')
+      // AT URIs contain dots, so this one must run to end-of-line — a
+      // `[^.\n]+` class would stop mid-URI and leave the tail glued to the prose.
+      .replace(/\s*AT URI:\s*[^\n]*/gi, '')
       .replace(/\s*Args:\s*[^.\n]+\.?/gi, '')
       .replace(/\s*Returns:\s*[^.\n]+\.?/gi, '')
       .replace(/\n{3,}/g, '\n\n')
