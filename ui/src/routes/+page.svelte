@@ -24,6 +24,14 @@
     (import.meta.env.PUBLIC_DEFAULT_FUNCTIONS_HANDLE as string | undefined) ??
     "hamburgerz.bsky.social";
 
+  /**
+   * "Add PDS" asks AT Search's relay to crawl a PDS. Hidden for now: the
+   * indexer runs in jetstream mode, so nothing consumes that relay and the
+   * request would succeed without affecting what gets indexed. Flip back to
+   * true once the indexer ingests its own relay alongside Jetstream.
+   */
+  const CRAWL_ENABLED: boolean = false;
+
   const FUNCTIONS_COLLECTION = "at.functions.metadata";
 
   type Mode = "pure-v1" | "host-v1" | "component-v1";
@@ -535,7 +543,7 @@
             >
           {/each}
 
-          {#if ATSEARCH_URL}
+          {#if ATSEARCH_URL && CRAWL_ENABLED}
             <button
               class="filter-btn crawl-open"
               onclick={() => (crawlSheetOpen = true)}
@@ -556,7 +564,7 @@
       {/if}
     </div>
 
-    {#if ATSEARCH_URL && crawlSheetOpen}
+    {#if ATSEARCH_URL && CRAWL_ENABLED && crawlSheetOpen}
       <div class="sheet-backdrop" role="presentation" onclick={closeCrawlSheet}>
         <div
           class="sheet"
