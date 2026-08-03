@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import runRoute from "./routes/run.js";
+import discoverRoute from "./routes/discover.js";
 
 const PORT = parseInt(process.env.PORT ?? "3000", 10);
 const HOST = process.env.HOST ?? "127.0.0.1";
@@ -38,6 +39,7 @@ await server.register(cors, {
 });
 
 await server.register(runRoute);
+await server.register(discoverRoute);
 
 // Health check
 server.get("/health", async () => ({ ok: true }));

@@ -338,6 +338,39 @@ Expected response:
 
 On failure: `ok: false, error: "reason"`.
 
+### `GET /xrpc/at.functions.discover`
+
+Server-side function discovery backed by [AT Search](../at-search) — finds published functions across the whole network (any PDS), no repo enumeration. The browser UI queries AT Search directly (`PUBLIC_ATSEARCH_URL`); this endpoint is the same capability for API consumers and agents.
+
+```
+GET /xrpc/at.functions.discover?q=resize+image&limit=10
+```
+
+- `q` (optional) — free text; omit to list every indexed function
+- `limit` (optional, default 25, max 100)
+
+**Response:**
+```json
+{
+  "ok": true,
+  "query": "resize image",
+  "count": 1,
+  "functions": [
+    {
+      "uri": "at://did:plc:.../at.functions.metadata/resize-v1",
+      "cid": "bafy...",
+      "name": "resize v1.0.0",
+      "description": "...",
+      "tags": ["at-functions", "wasm", "pure-v1"],
+      "score": 9,
+      "verified": true
+    }
+  ]
+}
+```
+
+Configure the AT Search query node with `ATSEARCH_QUERY_URL` (default `http://127.0.0.1:13002`; on the shared docker-compose stack, `http://query-node:3002`). Returns `502` when AT Search is unreachable.
+
 ---
 
 ## Tests
