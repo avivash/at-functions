@@ -198,14 +198,17 @@
   }
 
   async function fetchFromAtSearch(q: string): Promise<FunctionResult[]> {
+    // The lexicon filter is inline in `q` — there is no separate `collection`
+    // parameter. `<text> type:<nsid>` narrows to the collection AND requires a
+    // text match; a bare `type:<nsid>` lists everything in it.
     const params = new URLSearchParams();
     const trimmed = q.trim();
-    if (trimmed) {
-      params.set("q", trimmed);
-      params.set("collection", FUNCTIONS_COLLECTION);
-    } else {
-      params.set("q", `type:${FUNCTIONS_COLLECTION}`);
-    }
+    params.set(
+      "q",
+      trimmed
+        ? `${trimmed} type:${FUNCTIONS_COLLECTION}`
+        : `type:${FUNCTIONS_COLLECTION}`,
+    );
     const res = await fetch(`${ATSEARCH_URL}/search?${params.toString()}`);
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
