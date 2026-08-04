@@ -434,6 +434,28 @@ POST /xrpc/at.functions.run
 
 ---
 
+## Deploying the UI
+
+The UI is a static bundle with `PUBLIC_*` values baked in at build time, so it
+must be rebuilt whenever those change.
+
+```bash
+docker buildx build --target ui-artifact \
+  --build-arg PUBLIC_ATSEARCH_URL=https://api.functions.at \
+  --build-arg PUBLIC_AT_FUNCTIONS_API=https://api.functions.at \
+  --output type=local,dest=./ui-out .
+
+rsync -rlt --delete --chmod=D755,F644 ui-out/ ui/build/
+```
+
+**Use `--chmod`, not `rsync -a`.** BuildKit's local export carries the
+permissions of a `FROM scratch` layer, and `-a` preserves them — which leaves
+the files unreadable by nginx's worker and serves a **403 on every page load**.
+`--chmod=D755,F644` forces sane modes, so the deploy is self-correcting rather
+than needing a `chmod -R a+rX` afterwards.
+
+---
+
 ## Lexicons
 
 Schema definitions live in [`lexicons/`](lexicons/): [`at.functions.metadata`](lexicons/at.functions.metadata.json) (function records), [`at.functions.run`](lexicons/at.functions.run.json) (the XRPC run method), and [`at.functions.workflow`](lexicons/at.functions.workflow.json).
