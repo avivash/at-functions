@@ -2,11 +2,11 @@
 
 AT Functions treats the AT Protocol as a code registry and a Fastify service as a WASM execution runtime. Functions are stored as signed records on AT Proto, fetched on demand, and executed in a sandboxed WebAssembly environment.
 
-**pure-v1 / host-v1** — ABI-level execution modes:
+**pure-v1 / host-v1**: ABI-level execution modes
 
 [![demo](https://asciinema.org/a/WNxOeLHwd874B1cR.svg)](https://asciinema.org/a/WNxOeLHwd874B1cR)
 
-**component-v1** — WASI Component Model + WIT typed interfaces:
+**component-v1**: WASI Component Model + WIT typed interfaces
 
 [![component-v1 demo](https://asciinema.org/a/FRBHPlHE41DAVlVT.svg)](https://asciinema.org/a/FRBHPlHE41DAVlVT)
 
@@ -75,7 +75,7 @@ flowchart LR
 `component-v1` uses the [WASI Component Model](https://component-model.bytecodealliance.org/) and [WIT (WebAssembly Interface Types)](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) instead of the raw pointer/length ABI used by `pure-v1` and `host-v1`. It is the long-term direction for AT Functions.
 
 **Why it's better:**
-- Typed interfaces defined in WIT — no manual ptr/len packing or JSON envelope wrapping for host calls.
+- Typed interfaces defined in WIT, so no manual ptr/len packing or JSON envelope wrapping for host calls.
 - Language-agnostic: any language with a WIT bindgen (Rust, Go, C, Python, …) can implement the interface.
 - The host contract is explicit and machine-verifiable, not just a convention.
 
@@ -85,7 +85,7 @@ flowchart LR
 
 **Requirements:**
 - [`wasmtime`](https://wasmtime.dev/) (for local testing / `wasm-tools`)
-- [`wasm-tools`](https://github.com/bytecodealliance/wasm-tools) — to wrap a `wasm32-wasip1` binary into a component
+- [`wasm-tools`](https://github.com/bytecodealliance/wasm-tools): to wrap a `wasm32-wasip1` binary into a component
 - Rust `wasm32-wasip1` target: `rustup target add wasm32-wasip1`
 
 **Compiling the component-rust example:**
@@ -115,10 +115,10 @@ pnpm exec tsx scripts/invoke.ts \
 Your WASM module must export:
 
 ```
-memory                         — linear memory
-alloc(len: i32) -> i32         — allocate len bytes, return ptr
-run(ptr: i32, len: i32) -> i64 — execute; packed return: (ptr << 32 | len)
-dealloc(ptr: i32, len: i32)    — optional: free output buffer
+memory                         - linear memory
+alloc(len: i32) -> i32         - allocate len bytes, return ptr
+run(ptr: i32, len: i32) -> i64 - execute; packed return: (ptr << 32 | len)
+dealloc(ptr: i32, len: i32)    - optional: free output buffer
 ```
 
 Input/output are UTF-8 JSON. The host calls `alloc(input.len)`, writes input bytes, calls `run(ptr, len)`, then reads `len` output bytes from the returned pointer.
@@ -149,7 +149,7 @@ All host functions are **read-only**. `limit` is clamped to 100.
 
 ```
 at-functions/
-├── lexicons/               AT Lexicon definitions (published — see "Lexicons" below)
+├── lexicons/               AT Lexicon definitions (published, see "Lexicons" below)
 │   ├── at.functions.metadata.json
 │   ├── at.functions.run.json
 │   └── at.functions.workflow.json
@@ -251,7 +251,7 @@ ATPROTO_IDENTIFIER=you.bsky.social ATPROTO_PASSWORD=your-app-password \
     examples/pure-rust/target/wasm32-unknown-unknown/release/pure_echo.wasm
 ```
 
-Note the blob JSON printed at the end — you'll use it in the next step.
+Note the blob JSON printed at the end; you'll use it in the next step.
 
 ### 2. Register the function record
 
@@ -340,13 +340,13 @@ On failure: `ok: false, error: "reason"`.
 
 ### `GET /xrpc/at.functions.discover`
 
-Server-side function discovery backed by [AT Search](../at-search) — finds published functions across the whole network (any PDS), no repo enumeration. The browser UI queries AT Search directly (`PUBLIC_ATSEARCH_URL`); this endpoint is the same capability for API consumers and agents.
+Server-side function discovery backed by [AT Search](../at-search): finds published functions across the whole network (any PDS), no repo enumeration. The browser UI queries AT Search directly (`PUBLIC_ATSEARCH_URL`); this endpoint is the same capability for API consumers and agents.
 
 ```
 GET /xrpc/at.functions.discover?q=resize+image&limit=10
 ```
 
-- `q` (optional) — free text; omit to list every indexed function
+- `q` (optional): free text; omit to list every indexed function
 - `limit` (optional, default 25, max 100)
 
 **Response:**
@@ -393,7 +393,7 @@ Tests cover:
 
 - WASM runs in-process with no OS-level isolation
 - `maxMemoryMb` is enforced via initial page count only; the module can request more via `memory.grow`
-- `maxDurationMs` uses `Promise.race` with `setTimeout` — the WASM may continue running briefly after timeout
+- `maxDurationMs` uses `Promise.race` with `setTimeout`: the WASM may continue running briefly after timeout
 - No authentication or authorisation on the `/xrpc/at.functions.run` endpoint
 - `host-v1` functions can read any public AT Proto data
 
@@ -449,7 +449,7 @@ rsync -rlt --delete --chmod=D755,F644 ui-out/ ui/build/
 ```
 
 **Use `--chmod`, not `rsync -a`.** BuildKit's local export carries the
-permissions of a `FROM scratch` layer, and `-a` preserves them — which leaves
+permissions of a `FROM scratch` layer, and `-a` preserves them, which leaves
 the files unreadable by nginx's worker and serves a **403 on every page load**.
 `--chmod=D755,F644` forces sane modes, so the deploy is self-correcting rather
 than needing a `chmod -R a+rX` afterwards.
@@ -484,7 +484,7 @@ await resolveLexicon('at.functions.metadata') // → { uri, cid, lexicon }
 
 ### Discovery via AT Search
 
-Because the schema is published, schema-aware indexers can index `at.functions.metadata` records automatically. [AT Search](../at-search) indexes them off the firehose; searching for functions is one HTTP call against its query node — no PDS enumeration needed:
+Because the schema is published, schema-aware indexers can index `at.functions.metadata` records automatically. [AT Search](../at-search) indexes them off the firehose; searching for functions is one HTTP call against its query node, with no PDS enumeration needed:
 
 ```
 GET /search?q=type:at.functions.metadata          # list all indexed functions
