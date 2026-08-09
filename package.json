@@ -1,6 +1,7 @@
 {
   "name": "at-functions",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "POC: AT Protocol as a code registry with Fastify WASM execution runtime",
   "type": "module",
   "main": "dist/server.js",

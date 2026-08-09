@@ -503,3 +503,9 @@ This project demonstrates the concept of AT Protocol as a code registry. It is n
 - WASI-compatible
 
 It is a proof of concept to explore the idea and invite further discussion.
+
+---
+
+## License
+
+[MIT](LICENSE). Copyright (c) 2026 Andrew Vivash.
